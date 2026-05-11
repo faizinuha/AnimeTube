@@ -34,6 +34,7 @@ export default defineConfig(({ command, mode }) => {
     plugins.push(
       cloudflare({
         viteEnvironment: { name: "ssr" },
+        persistTo: false,
       }),
     );
   }

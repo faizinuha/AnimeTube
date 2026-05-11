@@ -1,28 +1,13 @@
 /**
- * Postbuild script: fix dist/client/wrangler.json
+ * Postbuild script: fix generated wrangler.json
  *
- * @cloudflare/vite-plugin generates wrangler.json with `triggers: {}`
- * which is invalid for Cloudflare Pages deployment (it expects
- * `triggers: { crons: [] }` or the field to be absent entirely).
- *
- * This script removes the invalid `triggers` field and any other
- * unknown top-level fields that cause Pages validation to fail.
+ * @cloudflare/vite-plugin generates wrangler.json with fields that are
+ * invalid for Cloudflare Pages deployment. This script removes them.
  */
 
 import { existsSync, readFileSync, writeFileSync } from "fs";
 import { resolve } from "path";
 
-const WRANGLER_PATH = resolve(process.cwd(), "dist/client/wrangler.json");
-
-if (!existsSync(WRANGLER_PATH)) {
-  console.log("[fix-wrangler] dist/client/wrangler.json not found — skipping.");
-  process.exit(0);
-}
-
-const raw = readFileSync(WRANGLER_PATH, "utf-8");
-const config = JSON.parse(raw);
-
-// Fields that Cloudflare Pages validator rejects
 const INVALID_TOP_LEVEL = [
   "triggers",
   "definedEnvironments",
@@ -39,37 +24,57 @@ const INVALID_TOP_LEVEL = [
   "python_modules",
 ];
 
-// Fields that Cloudflare Pages validator rejects inside "dev"
 const INVALID_DEV_FIELDS = ["enable_containers", "generate_types"];
 
-let changed = false;
+function patchFile(filePath) {
+  const raw = readFileSync(filePath, "utf-8");
+  const config = JSON.parse(raw);
+  let changed = false;
 
-for (const field of INVALID_TOP_LEVEL) {
-  if (field in config) {
-    delete config[field];
-    changed = true;
-    console.log(`[fix-wrangler] Removed top-level field: ${field}`);
-  }
-}
-
-if (config.dev && typeof config.dev === "object") {
-  for (const field of INVALID_DEV_FIELDS) {
-    if (field in config.dev) {
-      delete config.dev[field];
+  for (const field of INVALID_TOP_LEVEL) {
+    if (field in config) {
+      delete config[field];
       changed = true;
-      console.log(`[fix-wrangler] Removed dev.${field}`);
+      console.log(`[fix-wrangler] Removed top-level field: ${field}`);
     }
   }
-  // Remove empty dev object
-  if (Object.keys(config.dev).length === 0) {
-    delete config.dev;
-    changed = true;
+
+  if (config.dev && typeof config.dev === "object") {
+    for (const field of INVALID_DEV_FIELDS) {
+      if (field in config.dev) {
+        delete config.dev[field];
+        changed = true;
+        console.log(`[fix-wrangler] Removed dev.${field}`);
+      }
+    }
+    if (Object.keys(config.dev).length === 0) {
+      delete config.dev;
+      changed = true;
+    }
+  }
+
+  if (changed) {
+    writeFileSync(filePath, JSON.stringify(config, null, 2));
+    console.log(`[fix-wrangler] ✅ Patched: ${filePath}`);
+  } else {
+    console.log(`[fix-wrangler] No changes needed: ${filePath}`);
   }
 }
 
-if (changed) {
-  writeFileSync(WRANGLER_PATH, JSON.stringify(config, null, 2));
-  console.log("[fix-wrangler] ✅ wrangler.json patched successfully.");
-} else {
-  console.log("[fix-wrangler] No changes needed.");
+// Try .cloudflare/ first (new plugin output), then dist/client/ (fallback)
+const candidates = [
+  resolve(process.cwd(), ".cloudflare/wrangler.json"),
+  resolve(process.cwd(), "dist/client/wrangler.json"),
+];
+
+let found = false;
+for (const p of candidates) {
+  if (existsSync(p)) {
+    patchFile(p);
+    found = true;
+  }
+}
+
+if (!found) {
+  console.log("[fix-wrangler] No wrangler.json found — skipping.");
 }
