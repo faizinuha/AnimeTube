@@ -1,5 +1,4 @@
 name = "animevd"
 compatibility_date = "2025-09-24"
 compatibility_flags = ["nodejs_compat"]
-main = "src/server.ts"
 pages_build_output_dir = ".cloudflare"
