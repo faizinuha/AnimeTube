@@ -1,0 +1,72 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+import { Navbar } from "@/components/Navbar";
+import { Sidebar } from "@/components/Sidebar";
+import { VideoCard } from "@/components/VideoCard";
+import { SkeletonCard } from "@/components/SkeletonCard";
+import { AdSlot } from "@/components/AdSlot";
+import { searchVideos } from "@/lib/youtube.functions";
+
+export const Route = createFileRoute("/live")({
+  head: () => ({
+    meta: [
+      { title: "Anime Live — AnimeTube" },
+      { name: "description", content: "Live anime streams, watch parties and 24/7 anime channels." },
+    ],
+  }),
+  component: LivePage,
+});
+
+function LivePage() {
+  const { data, isLoading } = useQuery({
+    queryKey: ["live"],
+    queryFn: () => searchVideos({ data: { q: "anime live 24/7", eventType: "live", order: "viewCount", maxResults: 24 } }),
+    staleTime: 60 * 1000,
+  });
+  const { data: upcoming } = useQuery({
+    queryKey: ["upcoming"],
+    queryFn: () => searchVideos({ data: { q: "anime premiere", eventType: "upcoming", order: "date", maxResults: 12 } }),
+    staleTime: 60 * 1000,
+  });
+  return (
+    <div className="min-h-screen bg-background">
+      <Navbar />
+      <div className="flex">
+        <Sidebar />
+        <main className="flex-1 min-w-0 px-4 py-6">
+          <div className="mx-auto max-w-[1600px] space-y-10">
+            <header className="flex items-center gap-3">
+              <h1 className="font-display text-3xl font-black flex items-center gap-2">
+                <span className="relative inline-flex h-3 w-3">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-500 opacity-75" />
+                  <span className="relative inline-flex h-3 w-3 rounded-full bg-red-600" />
+                </span>
+                <span className="text-gradient">Live now</span>
+              </h1>
+              <span className="text-xs text-muted-foreground">Anime broadcasts streaming right now</span>
+            </header>
+
+            <section className="grid gap-x-4 gap-y-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {isLoading || !data
+                ? Array.from({ length: 8 }).map((_, i) => <SkeletonCard key={i} />)
+                : data.items.length === 0
+                ? <p className="col-span-full text-muted-foreground">No live anime streams right now. Check back soon.</p>
+                : data.items.map((v: any) => <VideoCard key={v.id} video={v} />)}
+            </section>
+
+            <AdSlot id="ad-live-mid" size="leaderboard" />
+
+            {upcoming?.items?.length ? (
+              <section>
+                <h2 className="font-display text-2xl font-bold mb-4">⏰ <span className="text-gradient">Upcoming premieres</span></h2>
+                <div className="grid gap-x-4 gap-y-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                  {upcoming.items.map((v: any) => <VideoCard key={v.id} video={v} />)}
+                </div>
+              </section>
+            ) : null}
+          </div>
+        </main>
+      </div>
+    </div>
+  );
+}
