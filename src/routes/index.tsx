@@ -1,28 +1,17 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { AdSlot } from "@/components/AdSlot";
+import { InfiniteScroll } from "@/components/InfiniteScroll";
 import { Navbar } from "@/components/Navbar";
 import { Sidebar } from "@/components/Sidebar";
-import { VideoCard } from "@/components/VideoCard";
 import { SkeletonCard } from "@/components/SkeletonCard";
-import { AdSlot } from "@/components/AdSlot";
-import { trendingAnime, searchVideos } from "@/lib/youtube.functions";
-import { useWatchHistory, topKeywords } from "@/hooks/use-watch-history";
-
-const trendingOpts = {
-  queryKey: ["trending"],
-  queryFn: () => trendingAnime({ data: { maxResults: 40, q: "anime" } }),
-  staleTime: 5 * 60 * 1000,
-};
+import { VideoCard } from "@/components/VideoCard";
+import { topKeywords, useWatchHistory } from "@/hooks/use-watch-history";
+import { searchVideos, trendingAnime } from "@/lib/youtube.functions";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
+import { createFileRoute, Link } from "@tanstack/react-router";
 
 const musicOpts = {
   queryKey: ["music"],
   queryFn: () => searchVideos({ data: { q: "anime music video", order: "viewCount", maxResults: 16 } }),
-  staleTime: 5 * 60 * 1000,
-};
-
-const shortsHomeOpts = {
-  queryKey: ["shorts-home"],
-  queryFn: () => searchVideos({ data: { q: "anime shorts", videoDuration: "short", order: "viewCount", maxResults: 20 } }),
   staleTime: 5 * 60 * 1000,
 };
 
@@ -112,9 +101,6 @@ export const Route = createFileRoute("/")({
       { name: "description", content: "Stream the latest anime, shorts, and live broadcasts. No login required." },
     ],
   }),
-  loader: ({ context }) => {
-    context.queryClient.ensureQueryData(trendingOpts);
-  },
   component: HomePage,
 });
 
@@ -209,7 +195,25 @@ function PopularMusic() {
 }
 
 function ShortsPreview() {
-  const { data, isLoading } = useQuery(shortsHomeOpts);
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } = useInfiniteQuery({
+    queryKey: ["shorts-home-infinite"],
+    queryFn: ({ pageParam }) =>
+      searchVideos({
+        data: {
+          q: "anime shorts",
+          videoDuration: "short",
+          order: "viewCount",
+          maxResults: 20,
+          pageToken: pageParam as string | undefined,
+        },
+      }),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (last: any) => last.nextPageToken ?? undefined,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const allItems = data?.pages.flatMap((p: any) => p.items) ?? [];
+
   return (
     <section className="mb-10">
       <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
@@ -226,21 +230,40 @@ function ShortsPreview() {
           Open Shorts
         </Link>
       </div>
-      <div className="grid gap-x-4 gap-y-8 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-        {isLoading || !data
-          ? Array.from({ length: 12 }).map((_, i) => <SkeletonCard key={i} />)
-          : data.items.flatMap((v: any, i: number) => {
-              const card = <VideoCard key={v.id} video={v} />;
-              if (i === 9) return [card, <div key="ad-shorts-home" className="col-span-1"><AdSlot id="ad-home-shorts" /></div>];
-              return [card];
-            })}
-      </div>
+      <InfiniteScroll onLoadMore={() => fetchNextPage()} hasMore={!!hasNextPage} loading={isFetchingNextPage}>
+        <div className="grid gap-x-4 gap-y-8 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+          {isLoading
+            ? Array.from({ length: 12 }).map((_, i) => <SkeletonCard key={i} />)
+            : allItems.flatMap((v: any, i: number) => {
+                const card = <VideoCard key={v.id + i} video={v} />;
+                if (i === 9) return [card, <div key="ad-shorts-home" className="col-span-1"><AdSlot id="ad-home-shorts" /></div>];
+                return [card];
+              })}
+          {isFetchingNextPage && Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={"sk" + i} />)}
+        </div>
+      </InfiniteScroll>
     </section>
   );
 }
 
 function Trending() {
-  const { data } = useQuery(trendingOpts);
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } = useInfiniteQuery({
+    queryKey: ["trending-infinite"],
+    queryFn: ({ pageParam }) =>
+      trendingAnime({
+        data: {
+          maxResults: 20,
+          q: "anime",
+          pageToken: pageParam as string | undefined,
+        },
+      }),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (last: any) => last.nextPageToken ?? undefined,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const allItems = data?.pages.flatMap((p: any) => p.items) ?? [];
+
   return (
     <section className="mb-10">
       <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
@@ -260,16 +283,19 @@ function Trending() {
           Browse all anime
         </Link>
       </div>
-      <div className="grid gap-x-4 gap-y-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {!data
-          ? Array.from({ length: 12 }).map((_, i) => <SkeletonCard key={i} />)
-          : data.items.flatMap((v: any, i: number) => {
-              const card = <VideoCard key={v.id} video={v} />;
-              if (i === 7) return [card, <div key="ad" className="col-span-1"><AdSlot id="ad-home-feed" /></div>];
-              if (i === 19) return [card, <div key="ad2" className="col-span-1"><AdSlot id="ad-home-feed-2" /></div>];
-              return [card];
-            })}
-      </div>
+      <InfiniteScroll onLoadMore={() => fetchNextPage()} hasMore={!!hasNextPage} loading={isFetchingNextPage}>
+        <div className="grid gap-x-4 gap-y-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {isLoading
+            ? Array.from({ length: 12 }).map((_, i) => <SkeletonCard key={i} />)
+            : allItems.flatMap((v: any, i: number) => {
+                const card = <VideoCard key={v.id + i} video={v} />;
+                if (i === 7) return [card, <div key="ad" className="col-span-1"><AdSlot id="ad-home-feed" /></div>];
+                if (i === 19) return [card, <div key="ad2" className="col-span-1"><AdSlot id="ad-home-feed-2" /></div>];
+                return [card];
+              })}
+          {isFetchingNextPage && Array.from({ length: 4 }).map((_, i) => <SkeletonCard key={"sk" + i} />)}
+        </div>
+      </InfiniteScroll>
     </section>
   );
 }
@@ -288,15 +314,6 @@ function HomePage() {
             <PopularMusic />
             <Trending />
             <ShortsPreview />
-            <div className="mt-12 text-center">
-              <Link
-                to="/search"
-                search={{ q: "anime" }}
-                className="inline-flex items-center gap-2 rounded-full bg-[var(--gradient-primary)] px-6 py-2.5 text-sm font-bold text-white shadow-[var(--shadow-glow)] hover:shadow-[var(--shadow-glow-strong)]"
-              >
-                Browse all anime →
-              </Link>
-            </div>
           </div>
         </main>
       </div>

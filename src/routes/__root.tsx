@@ -1,12 +1,12 @@
+import { DisclaimerModal } from "@/components/DisclaimerModal";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
-  Outlet,
-  Link,
   createRootRouteWithContext,
   HeadContent,
+  Link,
+  Outlet,
   Scripts,
 } from "@tanstack/react-router";
-import { DisclaimerModal } from "@/components/DisclaimerModal";
 
 import appCss from "../styles.css?url";
 
@@ -54,17 +54,28 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { title: "AnimeTube — Watch Anime. Live the Story." },
       { name: "description", content: "Stream the best anime videos. Trending series, isekai, shonen, mecha and more on AnimeTube." },
       { name: "theme-color", content: "#0a0a0f" },
+      { name: "google-adsense-account", content: "ca-pub-3161683709161579" },
       { property: "og:title", content: "AnimeTube — Watch Anime. Live the Story." },
       { property: "og:description", content: "Premium anime video streaming, powered by YouTube." },
       { property: "og:type", content: "website" },
+      { property: "og:image", content: "/logo.jpg" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
+      { rel: "icon", type: "image/jpeg", href: "/logo.jpg" },
+      { rel: "apple-touch-icon", href: "/logo.jpg" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "" },
       {
         rel: "stylesheet",
         href: "https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap",
+      },
+    ],
+    scripts: [
+      {
+        src: "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3161683709161579",
+        async: true,
+        crossOrigin: "anonymous",
       },
     ],
   }),
@@ -92,6 +103,7 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   return (
     <QueryClientProvider client={queryClient}>
+      <OfflineScreen />
       <DisclaimerModal />
       <Outlet />
     </QueryClientProvider>

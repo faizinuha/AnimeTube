@@ -1,12 +1,12 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
 import { Navbar } from "@/components/Navbar";
 import { Sidebar } from "@/components/Sidebar";
-import { VideoCard } from "@/components/VideoCard";
 import { SkeletonCard } from "@/components/SkeletonCard";
-import { getChannel, searchVideos } from "@/lib/youtube.functions";
+import { VideoCard } from "@/components/VideoCard";
 import { formatViews } from "@/lib/format";
+import { getChannel, searchVideos } from "@/lib/youtube.functions";
+import { useQuery } from "@tanstack/react-query";
+import { createFileRoute } from "@tanstack/react-router";
+import { useState } from "react";
 
 export const Route = createFileRoute("/channel/$channelId")({
   component: ChannelPage,
@@ -79,11 +79,16 @@ function ChannelPage() {
 
             <div className="py-6">
               {tab === "videos" ? (
-                <div className="grid gap-x-4 gap-y-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                  {isLoading
-                    ? Array.from({ length: 8 }).map((_, i) => <SkeletonCard key={i} />)
-                    : vidsData?.items?.map((v: any) => <VideoCard key={v.id} video={v} />)}
-                </div>
+                <>
+                  <div className="mb-4">
+                    <AdSlot id={`ad-channel-top-${channelId}`} size="leaderboard" />
+                  </div>
+                  <div className="grid gap-x-4 gap-y-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                    {isLoading
+                      ? Array.from({ length: 8 }).map((_, i) => <SkeletonCard key={i} />)
+                      : vidsData?.items?.map((v: any) => <VideoCard key={v.id} video={v} />)}
+                  </div>
+                </>
               ) : (
                 <div className="anime-border max-w-3xl rounded-xl bg-card p-6">
                   <p className="whitespace-pre-wrap text-sm text-muted-foreground">{ch?.snippet?.description || "No description."}</p>
@@ -91,6 +96,7 @@ function ChannelPage() {
               )}
             </div>
           </div>
+          <Footer showAd />
         </main>
       </div>
     </div>

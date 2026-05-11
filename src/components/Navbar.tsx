@@ -1,9 +1,9 @@
+import { toggleSidebar } from "@/hooks/use-sidebar";
+import { useTheme } from "@/hooks/use-theme";
+import { topKeywords, trackSearch, useRecentSearches } from "@/hooks/use-watch-history";
+import { GENRES } from "@/lib/constants";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useTheme } from "@/hooks/use-theme";
-import { toggleSidebar } from "@/hooks/use-sidebar";
-import { useRecentSearches, topKeywords, trackSearch } from "@/hooks/use-watch-history";
-import { GENRES } from "@/lib/constants";
 
 const POPULAR = [
   "anime opening 2025",
@@ -75,8 +75,8 @@ export function Navbar() {
         </button>
 
         <Link to="/" className="flex items-center gap-2 group shrink-0">
-          <div className="grid h-9 w-9 place-items-center rounded-lg bg-[var(--gradient-primary)] font-display text-xl font-black text-white shadow-[var(--shadow-glow)] group-hover:animate-pulse-glow">
-            A
+          <div className="h-9 w-9 overflow-hidden rounded-lg shadow-[var(--shadow-glow)] group-hover:animate-pulse-glow shrink-0">
+            <img src="/logo.jpg" alt="AnimeTube logo" className="h-full w-full object-cover" />
           </div>
           <div className="leading-none hidden sm:block">
             <span className="font-display text-2xl font-black text-gradient">AnimeTube</span>

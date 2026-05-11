@@ -1,34 +1,38 @@
-import { GENRES } from "@/lib/constants";
-import { Link } from "@tanstack/react-router";
+import { useEffect, useRef } from "react";
 
-// Safe in-house "house ads" — no third-party network, no gambling, no shady content.
-// Lightweight, non-intrusive, dismissible.
-const HOUSE_ADS = [
-  {
-    title: "Discover new anime genres",
-    body: "Browse handpicked categories curated for you.",
-    cta: "Explore",
-    to: "/category/$genre",
-    params: { genre: "isekai" },
-    emoji: "🌌",
+// Google AdSense — ca-pub-3161683709161579
+// All ad slots are served by Google's network.
+// Google automatically filters out gambling, adult, and prohibited content
+// based on the site's content policy and AdSense program policies.
+
+declare global {
+  interface Window {
+    adsbygoogle: unknown[];
+  }
+}
+
+type AdSize = "leaderboard" | "rectangle" | "inline";
+
+const SIZE_MAP: Record<AdSize, { slot: string; format: string; style: React.CSSProperties }> = {
+  // 728×90 leaderboard — used between sections
+  leaderboard: {
+    slot: "auto",
+    format: "auto",
+    style: { display: "block", minHeight: 90 },
   },
-  {
-    title: "Watch the trending hits",
-    body: "The hottest anime everyone is talking about.",
-    cta: "See trending",
-    to: "/category/$genre",
-    params: { genre: "trending" },
-    emoji: "🔥",
+  // 300×250 rectangle — used in sidebar / feed
+  rectangle: {
+    slot: "auto",
+    format: "auto",
+    style: { display: "block", minHeight: 250 },
   },
-  {
-    title: "Find your next favorite",
-    body: "Romance, action, comedy — all in one place.",
-    cta: "Open library",
-    to: "/category/$genre",
-    params: { genre: "romance" },
-    emoji: "💗",
+  // Responsive inline — used inside content grids
+  inline: {
+    slot: "auto",
+    format: "fluid",
+    style: { display: "block" },
   },
-];
+};
 
 export function AdSlot({
   id,
@@ -37,47 +41,40 @@ export function AdSlot({
   sticky = false,
 }: {
   id: string;
-  size?: "leaderboard" | "rectangle" | "inline";
+  size?: AdSize;
   label?: string;
   sticky?: boolean;
   className?: string;
 }) {
-  const idx = Math.abs(id.split("").reduce((a, c) => a + c.charCodeAt(0), 0)) % HOUSE_ADS.length;
-  const ad = HOUSE_ADS[idx];
+  const adRef = useRef<HTMLModElement>(null);
+  const pushed = useRef(false);
+  const { style, format } = SIZE_MAP[size];
+
+  useEffect(() => {
+    if (pushed.current) return;
+    try {
+      (window.adsbygoogle = window.adsbygoogle || []).push({});
+      pushed.current = true;
+    } catch {
+      // AdSense not loaded yet — silently ignore
+    }
+  }, []);
 
   return (
     <aside
-      aria-label="Sponsored content"
+      aria-label="Advertisement"
       data-ad-id={id}
-      className={`relative overflow-hidden rounded-xl border border-border bg-card/60 ${
-        sticky ? "sticky top-20" : ""
-      } ${size === "leaderboard" ? "p-4" : "p-4"} ${className}`}
+      className={`overflow-hidden rounded-xl ${sticky ? "sticky top-20" : ""} ${className}`}
     >
-      <div className="flex items-start gap-3">
-        <div className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-[var(--gradient-primary)] text-xl">
-          {ad.emoji}
-        </div>
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
-            <span className="rounded bg-muted px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-muted-foreground">
-              Ad
-            </span>
-            <span className="text-[10px] text-muted-foreground/70">From AnimeTube</span>
-          </div>
-          <h4 className="mt-1 truncate text-sm font-bold text-foreground">{ad.title}</h4>
-          <p className="line-clamp-2 text-xs text-muted-foreground">{ad.body}</p>
-          <Link
-            to={ad.to}
-            params={ad.params}
-            className="mt-2 inline-flex items-center gap-1 text-xs font-bold text-primary hover:underline"
-          >
-            {ad.cta} →
-          </Link>
-        </div>
-      </div>
+      <ins
+        ref={adRef}
+        className="adsbygoogle"
+        style={style}
+        data-ad-client="ca-pub-3161683709161579"
+        data-ad-slot="auto"
+        data-ad-format={format}
+        data-full-width-responsive="true"
+      />
     </aside>
   );
 }
-
-// Keep export shape compatible if imported elsewhere
-export const _GENRES_REF = GENRES;

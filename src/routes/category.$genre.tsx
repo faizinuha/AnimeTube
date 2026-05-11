@@ -1,12 +1,14 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { AdSlot } from "@/components/AdSlot";
+import { Footer } from "@/components/Footer";
+import { InfiniteScroll } from "@/components/InfiniteScroll";
 import { Navbar } from "@/components/Navbar";
 import { Sidebar } from "@/components/Sidebar";
-import { VideoCard } from "@/components/VideoCard";
 import { SkeletonCard } from "@/components/SkeletonCard";
-import { AdSlot } from "@/components/AdSlot";
-import { searchVideos } from "@/lib/youtube.functions";
+import { VideoCard } from "@/components/VideoCard";
 import { GENRES } from "@/lib/constants";
+import { searchVideos } from "@/lib/youtube.functions";
+import { useInfiniteQuery } from "@tanstack/react-query";
+import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/category/$genre")({
   component: CategoryPage,
@@ -16,11 +18,25 @@ function CategoryPage() {
   const { genre } = Route.useParams();
   const meta = GENRES.find((g) => g.slug === genre) || { slug: genre, label: genre, icon: "🎴" };
   const q = `${meta.label} anime`;
-  const { data, isLoading } = useQuery({
-    queryKey: ["category", q],
-    queryFn: () => searchVideos({ data: { q, order: "viewCount", maxResults: 24 } }),
+
+  const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = useInfiniteQuery({
+    queryKey: ["category-infinite", q],
+    queryFn: ({ pageParam }) =>
+      searchVideos({
+        data: {
+          q,
+          order: "viewCount",
+          maxResults: 24,
+          pageToken: pageParam as string | undefined,
+        },
+      }),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (last: any) => last.nextPageToken ?? undefined,
     staleTime: 5 * 60 * 1000,
   });
+
+  const allItems = data?.pages.flatMap((p: any) => p.items) ?? [];
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -36,20 +52,32 @@ function CategoryPage() {
                   <span className="mr-2">{meta.icon}</span>
                   <span className="text-gradient">{meta.label}</span>
                 </h1>
-                <p className="mt-2 text-sm text-muted-foreground">The very best of <strong>{meta.label}</strong> anime.</p>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  The very best of <strong>{meta.label}</strong> anime.
+                </p>
               </div>
             </header>
 
-            <div className="mt-6 grid gap-x-4 gap-y-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {isLoading || !data
-                ? Array.from({ length: 8 }).map((_, i) => <SkeletonCard key={i} />)
-                : data.items.flatMap((v: any, i: number) => {
-                    const card = <VideoCard key={v.id} video={v} />;
-                    if (i === 7) return [card, <div key="ad" className="col-span-1"><AdSlot id="ad-cat-feed" /></div>];
-                    return [card];
-                  })}
+            {/* Ad below header */}
+            <div className="mt-4">
+              <AdSlot id={`ad-cat-top-${genre}`} size="leaderboard" />
             </div>
+
+            <InfiniteScroll onLoadMore={() => fetchNextPage()} hasMore={!!hasNextPage} loading={isFetchingNextPage}>
+              <div className="mt-6 grid gap-x-4 gap-y-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                {isLoading
+                  ? Array.from({ length: 8 }).map((_, i) => <SkeletonCard key={i} />)
+                  : allItems.flatMap((v: any, i: number) => {
+                      const card = <VideoCard key={v.id + i} video={v} />;
+                      if (i > 0 && i % 8 === 0)
+                        return [card, <div key={"ad" + i} className="col-span-1"><AdSlot id={`ad-cat-${genre}-${i}`} /></div>];
+                      return [card];
+                    })}
+                {isFetchingNextPage && Array.from({ length: 4 }).map((_, i) => <SkeletonCard key={"sk" + i} />)}
+              </div>
+            </InfiniteScroll>
           </div>
+          <Footer showAd />
         </main>
       </div>
     </div>

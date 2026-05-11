@@ -1,14 +1,14 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
-import { z } from "zod";
-import { zodValidator, fallback } from "@tanstack/zod-adapter";
+import { AdSlot } from "@/components/AdSlot";
+import { InfiniteScroll } from "@/components/InfiniteScroll";
 import { Navbar } from "@/components/Navbar";
 import { Sidebar } from "@/components/Sidebar";
-import { VideoCard } from "@/components/VideoCard";
 import { SkeletonCard } from "@/components/SkeletonCard";
-import { AdSlot } from "@/components/AdSlot";
+import { VideoCard } from "@/components/VideoCard";
 import { searchVideos } from "@/lib/youtube.functions";
-import { useNavigate } from "@tanstack/react-router";
+import { useInfiniteQuery } from "@tanstack/react-query";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { fallback, zodValidator } from "@tanstack/zod-adapter";
+import { z } from "zod";
 
 const searchSchema = z.object({
   q: fallback(z.string(), "").default(""),
@@ -24,12 +24,26 @@ export const Route = createFileRoute("/search")({
 function SearchPage() {
   const { q, order, videoDuration } = Route.useSearch();
   const navigate = useNavigate({ from: "/search" });
-  const { data, isLoading } = useQuery({
+
+  const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = useInfiniteQuery({
     queryKey: ["search", q, order, videoDuration],
-    queryFn: () => searchVideos({ data: { q: q || "anime", order, videoDuration, maxResults: 24 } }),
+    queryFn: ({ pageParam }) =>
+      searchVideos({
+        data: {
+          q: q || "anime",
+          order,
+          videoDuration,
+          maxResults: 24,
+          pageToken: pageParam as string | undefined,
+        },
+      }),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (last: any) => last.nextPageToken ?? undefined,
     enabled: !!q,
     staleTime: 5 * 60 * 1000,
   });
+
+  const allItems = data?.pages.flatMap((p: any) => p.items) ?? [];
 
   return (
     <div className="min-h-screen bg-background">
@@ -67,23 +81,31 @@ function SearchPage() {
               </select>
             </div>
 
-            <div className="mt-6 grid gap-x-4 gap-y-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {isLoading
-                ? Array.from({ length: 9 }).map((_, i) => <SkeletonCard key={i} />)
-                : data?.items?.map((v: any) => <VideoCard key={v.id} video={v} />)}
-            </div>
+            <InfiniteScroll
+              onLoadMore={() => fetchNextPage()}
+              hasMore={!!hasNextPage}
+              loading={isFetchingNextPage}
+            >
+              <div className="mt-6 grid gap-x-4 gap-y-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                {isLoading
+                  ? Array.from({ length: 9 }).map((_, i) => <SkeletonCard key={i} />)
+                  : allItems.map((v: any, i: number) => <VideoCard key={v.id + i} video={v} />)}
+                {isFetchingNextPage && Array.from({ length: 4 }).map((_, i) => <SkeletonCard key={"sk" + i} />)}
+              </div>
+            </InfiniteScroll>
 
-            {!isLoading && (data?.items?.length || 0) === 0 && q && (
+            {!isLoading && allItems.length === 0 && q && (
               <div className="py-16 text-center">
                 <div className="text-6xl">🍥</div>
                 <p className="mt-4 text-muted-foreground">No results found for "{q}"</p>
               </div>
             )}
 
-            {(data?.items?.length || 0) >= 12 && (
+            {allItems.length >= 12 && (
               <div className="mt-8"><AdSlot id="ad-search-bottom" size="leaderboard" /></div>
             )}
           </div>
+          <Footer showAd />
         </main>
       </div>
     </div>

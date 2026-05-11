@@ -1,11 +1,11 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { AdSlot } from "@/components/AdSlot";
 import { Navbar } from "@/components/Navbar";
 import { Sidebar } from "@/components/Sidebar";
-import { VideoCard } from "@/components/VideoCard";
 import { SkeletonCard } from "@/components/SkeletonCard";
-import { AdSlot } from "@/components/AdSlot";
+import { VideoCard } from "@/components/VideoCard";
 import { searchVideos } from "@/lib/youtube.functions";
+import { useQuery } from "@tanstack/react-query";
+import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/live")({
   head: () => ({
@@ -65,6 +65,7 @@ function LivePage() {
               </section>
             ) : null}
           </div>
+          <Footer showAd />
         </main>
       </div>
     </div>

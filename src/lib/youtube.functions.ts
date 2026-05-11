@@ -21,6 +21,60 @@ async function yt(path: string, params: Record<string, string | number | undefin
   return res.json();
 }
 
+/** Parse ISO 8601 duration to total seconds */
+function parseDurationSec(iso: string | undefined): number {
+  if (!iso) return 0;
+  const m = iso.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+  if (!m) return 0;
+  return (parseInt(m[1] || "0") * 3600) + (parseInt(m[2] || "0") * 60) + parseInt(m[3] || "0");
+}
+
+/**
+ * Smart ranking algorithm:
+ * - Boosts videos with high view/like ratio (engagement)
+ * - Penalizes very short clips < 30s (likely spam/preview)
+ * - Boosts medium-length (4–25 min) for episode content
+ * - Boosts recent uploads (last 7 days)
+ * - Boosts videos with high comment count (community engagement)
+ */
+function smartRank(items: any[]): any[] {
+  const now = Date.now();
+  return items
+    .map((v) => {
+      const views = parseInt(v.statistics?.viewCount || "0");
+      const likes = parseInt(v.statistics?.likeCount || "0");
+      const comments = parseInt(v.statistics?.commentCount || "0");
+      const durSec = parseDurationSec(v.contentDetails?.duration);
+      const ageMs = now - new Date(v.snippet?.publishedAt || 0).getTime();
+      const ageDays = ageMs / (1000 * 60 * 60 * 24);
+
+      // Engagement ratio (likes per 1000 views)
+      const engagementRate = views > 0 ? (likes / views) * 1000 : 0;
+
+      // Duration score: penalize < 30s, boost 4–25 min
+      let durScore = 1;
+      if (durSec < 30) durScore = 0.1;
+      else if (durSec < 60) durScore = 0.5;
+      else if (durSec >= 240 && durSec <= 1500) durScore = 1.4; // 4–25 min sweet spot
+      else if (durSec > 3600) durScore = 0.8; // very long, slight penalty
+
+      // Recency boost: last 7 days = 1.5x, last 30 days = 1.2x
+      let recencyScore = 1;
+      if (ageDays <= 7) recencyScore = 1.5;
+      else if (ageDays <= 30) recencyScore = 1.2;
+
+      // Comment activity boost
+      const commentBoost = comments > 100 ? 1.2 : comments > 10 ? 1.1 : 1;
+
+      const score =
+        Math.log10(views + 1) * durScore * recencyScore * commentBoost * (1 + engagementRate * 0.1);
+
+      return { ...v, _score: score };
+    })
+    .sort((a, b) => b._score - a._score)
+    .map(({ _score: _, ...v }) => v);
+}
+
 export const searchVideos = createServerFn({ method: "GET" })
   .inputValidator(
     z.object({
@@ -56,9 +110,10 @@ export const searchVideos = createServerFn({ method: "GET" })
         id: ids,
       });
     }
-    const filteredItems = processYouTubeResponse(details.items || []);
+    const filtered = processYouTubeResponse(details.items || []);
+    const ranked = smartRank(filtered);
     return {
-      items: filteredItems,
+      items: ranked,
       nextPageToken: json.nextPageToken,
       prevPageToken: json.prevPageToken,
     };
@@ -69,6 +124,7 @@ export const trendingAnime = createServerFn({ method: "GET" })
     z.object({
       maxResults: z.number().min(1).max(50).default(20),
       q: z.string().default("anime"),
+      pageToken: z.string().optional(),
     }).parse,
   )
   .handler(async ({ data }) => {
@@ -80,18 +136,20 @@ export const trendingAnime = createServerFn({ method: "GET" })
       maxResults: data.maxResults,
       order: "viewCount",
       publishedAfter,
+      pageToken: data.pageToken,
       regionCode: "US",
       relevanceLanguage: "en",
       safeSearch: "strict",
     });
     const ids = (json.items || []).map((i: any) => i.id?.videoId).filter(Boolean).join(",");
-    if (!ids) return { items: [] };
+    if (!ids) return { items: [], nextPageToken: undefined };
     const details = await yt("videos", {
       part: "snippet,statistics,contentDetails",
       id: ids,
     });
-    const filteredItems = processYouTubeResponse(details.items || []);
-    return { items: filteredItems };
+    const filtered = processYouTubeResponse(details.items || []);
+    const ranked = smartRank(filtered);
+    return { items: ranked, nextPageToken: json.nextPageToken };
   });
 
 export const getVideo = createServerFn({ method: "GET" })

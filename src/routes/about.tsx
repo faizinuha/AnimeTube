@@ -1,7 +1,7 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { AdSlot } from "@/components/AdSlot";
 import { Navbar } from "@/components/Navbar";
 import { Sidebar } from "@/components/Sidebar";
-import { AdSlot } from "@/components/AdSlot";
+import { createFileRoute, Link } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/about")({
   head: () => ({
@@ -92,6 +92,7 @@ function AboutPage() {
           </div>
         </main>
       </div>
+      <Footer showAd />
     </div>
   );
 }
