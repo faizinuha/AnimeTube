@@ -31,3 +31,7 @@ dist-ssr
 *.sln
 *.sw?
 .env
+
+.dev.vars*
+!.dev.vars.example
+!.env.example
