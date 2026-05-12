@@ -18,57 +18,57 @@ const HERO_LINKS = [
 
 function HeroSection() {
   return (
-    <section className="mb-10 overflow-hidden rounded-[2rem] border border-border bg-[radial-gradient(circle_at_top,_rgba(167,112,255,0.18),transparent_34%),radial-gradient(circle_at_20%_10%,rgba(255,92,184,0.14),transparent_22%),linear-gradient(180deg,#120b1d,#09060d)] p-6 shadow-[var(--shadow-glow)]">
-      <div className="relative overflow-hidden rounded-[2rem] bg-[linear-gradient(180deg,rgba(255,255,255,0.06),transparent)] p-6 sm:p-8">
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-[radial-gradient(circle,_rgba(255,255,255,0.18),transparent_70%)] opacity-40" />
-        <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr] items-center">
-          <div className="relative z-10 space-y-6">
-            <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs uppercase tracking-[0.32em] text-primary shadow-[var(--shadow-glow)]">
-              2026 update
-            </div>
-            <div className="space-y-4">
-              <h1 className="font-display text-4xl font-black tracking-[-0.04em] sm:text-5xl">
-                AnimeTube — <span className="text-gradient">Live the Story</span>
-              </h1>
-              <p className="max-w-xl text-sm text-muted-foreground sm:text-base">
-                Rasakan tampilan baru yang lebih dinamis, neon, dan berenergi. Temukan video anime, shorts, dan siaran live terbaik tanpa login.
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-3">
-              <Link to="/search" search={{ q: "anime" }}
-                className="inline-flex items-center gap-2 rounded-full bg-[var(--gradient-primary)] px-5 py-3 text-sm font-bold text-white shadow-[var(--shadow-glow)] transition hover:shadow-[var(--shadow-glow-strong)]">
-                Explore Anime
+    <section className="mb-8 overflow-hidden rounded-xl border border-border bg-gradient-to-br from-surface via-background to-surface">
+      <div className="px-5 py-8 sm:px-8 sm:py-10">
+        <div className="flex flex-col gap-6 lg:grid lg:grid-cols-[1.3fr_1fr] lg:items-center">
+          {/* Left */}
+          <div className="space-y-4">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/25 bg-primary/8 px-3 py-1 text-[11px] font-semibold uppercase tracking-widest text-primary">
+              2026 Update
+            </span>
+            <h1 className="text-3xl sm:text-4xl font-bold tracking-tight leading-tight">
+              AnimeTube —{" "}
+              <span className="text-gradient">Live the Story</span>
+            </h1>
+            <p className="text-sm text-muted-foreground leading-relaxed max-w-md">
+              Nonton anime gratis, tanpa login. Trending, Shorts, Live, dan ratusan genre — semua dalam satu tempat.
+            </p>
+            <div className="flex flex-wrap gap-2.5 pt-1">
+              <Link
+                to="/search"
+                search={{ q: "anime" }}
+                className="inline-flex items-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:opacity-90 transition-opacity"
+              >
+                Jelajahi Anime
               </Link>
-              <Link to="/shorts"
-                className="inline-flex items-center gap-2 rounded-full border border-border bg-card/80 px-5 py-3 text-sm font-semibold text-foreground transition hover:border-primary hover:text-primary">
-                Enter Shorts
+              <Link
+                to="/shorts"
+                className="inline-flex items-center gap-2 rounded-lg border border-border bg-surface px-5 py-2.5 text-sm font-semibold text-foreground hover:border-primary/50 hover:text-primary transition-colors"
+              >
+                Buka Shorts
               </Link>
             </div>
           </div>
-          <div className="relative grid gap-3">
-            <div className="anime-border rounded-[1.75rem] border border-border bg-surface/70 p-4 backdrop-blur-xl">
-              <div className="mb-4 flex items-center justify-between text-sm font-semibold text-foreground">
-                <span>Daily picks</span>
-                <span className="rounded-full bg-primary/10 px-2 py-1 text-[11px] uppercase tracking-[0.2em] text-primary">AnimeTube</span>
+
+          {/* Right — quick links, hidden on small mobile */}
+          <div className="hidden sm:grid gap-2">
+            <div className="rounded-lg border border-border bg-surface/60 p-4">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-xs font-semibold text-foreground">Daily picks</span>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-primary">AnimeTube</span>
               </div>
-              <div className="grid gap-3">
+              <div className="grid gap-1.5">
                 {HERO_LINKS.map((item) => (
-                  <Link key={item.label} to="/search" search={{ q: item.query }}
-                    className="flex items-center justify-between rounded-3xl border border-border bg-card/80 px-4 py-3 text-sm text-foreground transition hover:border-primary hover:bg-primary/5">
+                  <Link
+                    key={item.label}
+                    to="/search"
+                    search={{ q: item.query }}
+                    className="flex items-center justify-between rounded-md border border-border/50 bg-background/60 px-3 py-2 text-sm text-foreground hover:border-primary/40 hover:bg-primary/5 transition-colors"
+                  >
                     <span>{item.label}</span>
-                    <span className="rounded-full bg-primary/10 px-2 py-1 text-[11px] font-semibold text-primary">{item.badge}</span>
+                    <span className="rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-semibold text-primary">{item.badge}</span>
                   </Link>
                 ))}
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="rounded-[1.75rem] bg-gradient-to-br from-[#7f5cff]/15 via-[#ff5ddb]/10 to-transparent p-4 text-sm text-foreground shadow-[inset_0_0_0_1px_rgba(255,255,255,0.05)]">
-                <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">New season</p>
-                <p className="mt-3 font-semibold">Isekai & Shonen Stream</p>
-              </div>
-              <div className="rounded-[1.75rem] bg-gradient-to-br from-[#28b2ff]/15 via-[#7f5cff]/10 to-transparent p-4 text-sm text-foreground shadow-[inset_0_0_0_1px_rgba(255,255,255,0.05)]">
-                <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">Featured</p>
-                <p className="mt-3 font-semibold">Live sesh & AMV beats</p>
               </div>
             </div>
           </div>
