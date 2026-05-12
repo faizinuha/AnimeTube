@@ -139,10 +139,12 @@ export async function getRelated(q: string, excludeId?: string) {
   return { items: processYouTubeResponse(details.items || []) };
 }
 
+export async function getChannel(id: string) {
+  const json = await yt("channels", { part: "snippet,statistics,brandingSettings", id });
+  return { channel: json.items?.[0] || null };
+}
 
-// Daftar channel anime populer — ID channel YouTube
-
-// Real popular anime channels
+// Real popular anime channels — refreshed weekly
 const REAL_ANIME_CHANNELS = [
   "UCVTyTA7-g9nopHeHbeuvpRA", // Crunchyroll
   "UCoqWQehkMEBqBFkFGa-IQKA", // Muse Asia
