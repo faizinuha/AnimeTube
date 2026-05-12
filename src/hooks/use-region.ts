@@ -13,7 +13,7 @@ export type Region = {
 };
 
 export const REGIONS: Region[] = [
-  { code: "ID", label: "Indonesia",  flag: "🇮🇩", lang: "id" },
+  { code: "ID", label: "Indonesia",  flag: "🇮🇩", lang: "en" },
   { code: "JP", label: "Jepang",     flag: "🇯🇵", lang: "ja",
     warning: "Konten dari Jepang mungkin mengandung materi yang tidak tersedia atau berbeda di Indonesia. Kami tidak bertanggung jawab atas konten yang ditampilkan dari region ini." },
   { code: "CN", label: "China",      flag: "🇨🇳", lang: "zh-Hans",

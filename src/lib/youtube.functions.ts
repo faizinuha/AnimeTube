@@ -4,10 +4,19 @@ import { processYouTubeResponse } from "./content-filter";
 // Proxy endpoint — API key disimpan di server Vercel, tidak exposed ke browser
 const PROXY = "/api/youtube";
 
+// YouTube relevanceLanguage hanya support subset BCP-47
+// https://developers.google.com/youtube/v3/docs/search/list#relevanceLanguage
+const YT_SUPPORTED_LANGS = new Set([
+  "ar","zh-Hans","zh-Hant","cs","da","nl","en","fi","fr","de",
+  "el","hu","id","it","ja","ko","ms","no","pl","pt","ro","ru",
+  "es","sv","tr","uk","vi",
+]);
+
 function getRegionParams() {
   const code = getRegion();
   const r = REGIONS.find((x) => x.code === code) ?? REGIONS[0];
-  return { regionCode: r.code, relevanceLanguage: r.lang };
+  const lang = YT_SUPPORTED_LANGS.has(r.lang) ? r.lang : "en";
+  return { regionCode: r.code, relevanceLanguage: lang };
 }
 
 async function yt(path: string, params: Record<string, string | number | undefined>) {
