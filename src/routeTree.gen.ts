@@ -18,52 +18,24 @@ import { Route as SearchRouteImport } from './routes/search'
 import { Route as ShortsRouteImport } from './routes/shorts'
 import { Route as WatchRouteImport } from './routes/watch'
 
-const WatchRoute = WatchRouteImport.update({
-  id: '/watch',
-  path: '/watch',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ShortsRoute = ShortsRouteImport.update({
-  id: '/shorts',
-  path: '/shorts',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SearchRoute = SearchRouteImport.update({
-  id: '/search',
-  path: '/search',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LiveRoute = LiveRouteImport.update({
-  id: '/live',
-  path: '/live',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AboutRoute = AboutRouteImport.update({
-  id: '/about',
-  path: '/about',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ChannelChannelIdRoute = ChannelChannelIdRouteImport.update({
-  id: '/channel/$channelId',
-  path: '/channel/$channelId',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CategoryGenreRoute = CategoryGenreRouteImport.update({
-  id: '/category/$genre',
-  path: '/category/$genre',
-  getParentRoute: () => rootRouteImport,
-} as any)
+const WatchRoute = WatchRouteImport.update({ id: '/watch', path: '/watch', getParentRoute: () => rootRouteImport } as any)
+const ShortsRoute = ShortsRouteImport.update({ id: '/shorts', path: '/shorts', getParentRoute: () => rootRouteImport } as any)
+const SettingsRoute = SettingsRouteImport.update({ id: '/settings', path: '/settings', getParentRoute: () => rootRouteImport } as any)
+const SearchRoute = SearchRouteImport.update({ id: '/search', path: '/search', getParentRoute: () => rootRouteImport } as any)
+const LiveRoute = LiveRouteImport.update({ id: '/live', path: '/live', getParentRoute: () => rootRouteImport } as any)
+const ChannelsRoute = ChannelsRouteImport.update({ id: '/channels', path: '/channels', getParentRoute: () => rootRouteImport } as any)
+const AboutRoute = AboutRouteImport.update({ id: '/about', path: '/about', getParentRoute: () => rootRouteImport } as any)
+const IndexRoute = IndexRouteImport.update({ id: '/', path: '/', getParentRoute: () => rootRouteImport } as any)
+const ChannelChannelIdRoute = ChannelChannelIdRouteImport.update({ id: '/channel/$channelId', path: '/channel/$channelId', getParentRoute: () => rootRouteImport } as any)
+const CategoryGenreRoute = CategoryGenreRouteImport.update({ id: '/category/$genre', path: '/category/$genre', getParentRoute: () => rootRouteImport } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/channels': typeof ChannelsRoute
   '/live': typeof LiveRoute
   '/search': typeof SearchRoute
+  '/settings': typeof SettingsRoute
   '/shorts': typeof ShortsRoute
   '/watch': typeof WatchRoute
   '/category/$genre': typeof CategoryGenreRoute
@@ -72,8 +44,10 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/channels': typeof ChannelsRoute
   '/live': typeof LiveRoute
   '/search': typeof SearchRoute
+  '/settings': typeof SettingsRoute
   '/shorts': typeof ShortsRoute
   '/watch': typeof WatchRoute
   '/category/$genre': typeof CategoryGenreRoute
@@ -83,8 +57,10 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/channels': typeof ChannelsRoute
   '/live': typeof LiveRoute
   '/search': typeof SearchRoute
+  '/settings': typeof SettingsRoute
   '/shorts': typeof ShortsRoute
   '/watch': typeof WatchRoute
   '/category/$genre': typeof CategoryGenreRoute
@@ -92,42 +68,19 @@ export interface FileRoutesById {
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths:
-    | '/'
-    | '/about'
-    | '/live'
-    | '/search'
-    | '/shorts'
-    | '/watch'
-    | '/category/$genre'
-    | '/channel/$channelId'
+  fullPaths: '/' | '/about' | '/channels' | '/live' | '/search' | '/settings' | '/shorts' | '/watch' | '/category/$genre' | '/channel/$channelId'
   fileRoutesByTo: FileRoutesByTo
-  to:
-    | '/'
-    | '/about'
-    | '/live'
-    | '/search'
-    | '/shorts'
-    | '/watch'
-    | '/category/$genre'
-    | '/channel/$channelId'
-  id:
-    | '__root__'
-    | '/'
-    | '/about'
-    | '/live'
-    | '/search'
-    | '/shorts'
-    | '/watch'
-    | '/category/$genre'
-    | '/channel/$channelId'
+  to: '/' | '/about' | '/channels' | '/live' | '/search' | '/settings' | '/shorts' | '/watch' | '/category/$genre' | '/channel/$channelId'
+  id: '__root__' | '/' | '/about' | '/channels' | '/live' | '/search' | '/settings' | '/shorts' | '/watch' | '/category/$genre' | '/channel/$channelId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
+  ChannelsRoute: typeof ChannelsRoute
   LiveRoute: typeof LiveRoute
   SearchRoute: typeof SearchRoute
+  SettingsRoute: typeof SettingsRoute
   ShortsRoute: typeof ShortsRoute
   WatchRoute: typeof WatchRoute
   CategoryGenreRoute: typeof CategoryGenreRoute
@@ -136,74 +89,30 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/watch': {
-      id: '/watch'
-      path: '/watch'
-      fullPath: '/watch'
-      preLoaderRoute: typeof WatchRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/shorts': {
-      id: '/shorts'
-      path: '/shorts'
-      fullPath: '/shorts'
-      preLoaderRoute: typeof ShortsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/search': {
-      id: '/search'
-      path: '/search'
-      fullPath: '/search'
-      preLoaderRoute: typeof SearchRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/live': {
-      id: '/live'
-      path: '/live'
-      fullPath: '/live'
-      preLoaderRoute: typeof LiveRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/about': {
-      id: '/about'
-      path: '/about'
-      fullPath: '/about'
-      preLoaderRoute: typeof AboutRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/channel/$channelId': {
-      id: '/channel/$channelId'
-      path: '/channel/$channelId'
-      fullPath: '/channel/$channelId'
-      preLoaderRoute: typeof ChannelChannelIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/category/$genre': {
-      id: '/category/$genre'
-      path: '/category/$genre'
-      fullPath: '/category/$genre'
-      preLoaderRoute: typeof CategoryGenreRouteImport
-      parentRoute: typeof rootRouteImport
-    }
+    '/watch': { id: '/watch'; path: '/watch'; fullPath: '/watch'; preLoaderRoute: typeof WatchRouteImport; parentRoute: typeof rootRouteImport }
+    '/shorts': { id: '/shorts'; path: '/shorts'; fullPath: '/shorts'; preLoaderRoute: typeof ShortsRouteImport; parentRoute: typeof rootRouteImport }
+    '/settings': { id: '/settings'; path: '/settings'; fullPath: '/settings'; preLoaderRoute: typeof SettingsRouteImport; parentRoute: typeof rootRouteImport }
+    '/search': { id: '/search'; path: '/search'; fullPath: '/search'; preLoaderRoute: typeof SearchRouteImport; parentRoute: typeof rootRouteImport }
+    '/live': { id: '/live'; path: '/live'; fullPath: '/live'; preLoaderRoute: typeof LiveRouteImport; parentRoute: typeof rootRouteImport }
+    '/channels': { id: '/channels'; path: '/channels'; fullPath: '/channels'; preLoaderRoute: typeof ChannelsRouteImport; parentRoute: typeof rootRouteImport }
+    '/about': { id: '/about'; path: '/about'; fullPath: '/about'; preLoaderRoute: typeof AboutRouteImport; parentRoute: typeof rootRouteImport }
+    '/': { id: '/'; path: '/'; fullPath: '/'; preLoaderRoute: typeof IndexRouteImport; parentRoute: typeof rootRouteImport }
+    '/channel/$channelId': { id: '/channel/$channelId'; path: '/channel/$channelId'; fullPath: '/channel/$channelId'; preLoaderRoute: typeof ChannelChannelIdRouteImport; parentRoute: typeof rootRouteImport }
+    '/category/$genre': { id: '/category/$genre'; path: '/category/$genre'; fullPath: '/category/$genre'; preLoaderRoute: typeof CategoryGenreRouteImport; parentRoute: typeof rootRouteImport }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
-  AboutRoute: AboutRoute,
-  LiveRoute: LiveRoute,
-  SearchRoute: SearchRoute,
-  ShortsRoute: ShortsRoute,
-  WatchRoute: WatchRoute,
-  CategoryGenreRoute: CategoryGenreRoute,
-  ChannelChannelIdRoute: ChannelChannelIdRoute,
+  IndexRoute,
+  AboutRoute,
+  ChannelsRoute,
+  LiveRoute,
+  SearchRoute,
+  SettingsRoute,
+  ShortsRoute,
+  WatchRoute,
+  CategoryGenreRoute,
+  ChannelChannelIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

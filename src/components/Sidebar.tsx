@@ -2,13 +2,11 @@ import { useRegion } from "@/hooks/use-region";
 import { useSidebar } from "@/hooks/use-sidebar";
 import { useWatchHistory } from "@/hooks/use-watch-history";
 import { GENRES } from "@/lib/constants";
-import { getAnimeChannels } from "@/lib/youtube.functions";
-import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import {
   AlertTriangle, Coffee, Compass, Globe,
   HelpCircle, Home, Info, Lock,
-  Radio, TrendingUp, X, Zap,
+  Radio, Settings, TrendingUp, Tv2, X, Zap,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -18,12 +16,14 @@ const MAIN = [
   { to: "/live",            label: "Live",     Icon: Radio     },
   { to: "/search",          label: "Jelajahi", Icon: Compass,  search: { q: "anime" } },
   { to: "/category/$genre", label: "Trending", Icon: TrendingUp, params: { genre: "trending" } },
+  { to: "/channels",        label: "Channels", Icon: Tv2       },
 ] as const;
 
 const META = [
-  { to: "/about", label: "Tentang",  Icon: Info,       hash: undefined },
-  { to: "/about", label: "Bantuan",  Icon: HelpCircle, hash: "help"    },
-  { to: "/about", label: "Privasi",  Icon: Lock,       hash: "privacy" },
+  { to: "/settings", label: "Pengaturan", Icon: Settings,   hash: undefined },
+  { to: "/about",    label: "Tentang",    Icon: Info,       hash: undefined },
+  { to: "/about",    label: "Bantuan",    Icon: HelpCircle, hash: "help"    },
+  { to: "/about",    label: "Privasi",    Icon: Lock,       hash: "privacy" },
 ] as const;
 
 // ── Region Selector ──────────────────────────────────────────────
@@ -105,91 +105,7 @@ function RegionSelector({ onClose }: { onClose?: () => void }) {
   );
 }
 
-// ── Anime Channels ────────────────────────────────────────────────
-function AnimeChannels({ onItemClick }: { onItemClick?: () => void }) {
-  const { data, isLoading } = useQuery({
-    queryKey: ["anime-channels-sidebar"],
-    queryFn: getAnimeChannels,
-    staleTime: 7 * 24 * 60 * 60 * 1000, // 1 week
-    gcTime: 7 * 24 * 60 * 60 * 1000,
-  });
-
-  if (isLoading) {
-    return (
-      <div className="px-3 space-y-2">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="flex items-center gap-2.5">
-            <div className="skeleton h-7 w-7 rounded-full shrink-0" />
-            <div className="skeleton h-3 flex-1 rounded" />
-          </div>
-        ))}
-      </div>
-    );
-  }
-
-  const channels = data?.channels ?? [];
-  if (!channels.length) return null;
-
-  return (
-    <div className="px-2 space-y-0.5">
-      {channels.map((ch: any) => {
-        const avatar =
-          ch.snippet?.thumbnails?.default?.url ||
-          ch.snippet?.thumbnails?.medium?.url;
-        const name = ch.snippet?.title || "Channel";
-        return (
-          <Link
-            key={ch.id}
-            to="/channel/$channelId"
-            params={{ channelId: ch.id }}
-            onClick={onItemClick}
-            className="flex items-center gap-2.5 rounded-lg px-2 py-1.5 text-xs text-muted-foreground hover:bg-surface hover:text-foreground transition-colors"
-          >
-            {avatar ? (
-              <img
-                src={avatar}
-                alt={name}
-                className="h-7 w-7 rounded-full object-cover shrink-0 ring-1 ring-border"
-                loading="lazy"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).style.display = "none";
-                }}
-              />
-            ) : (
-              <div className="h-7 w-7 rounded-full bg-primary/20 grid place-items-center text-[10px] font-bold text-primary shrink-0">
-                {name[0]}
-              </div>
-            )}
-            <span className="truncate">{name}</span>
-          </Link>
-        );
-      })}
-    </div>
-  );
-}
-
 // ── Support Banner ────────────────────────────────────────────────
-function SupportBanner() {
-  return (
-    <div className="mx-3 my-2 rounded-lg bg-primary/8 border border-primary/15 p-3">
-      <div className="flex items-center gap-1.5 mb-1.5">
-        <Coffee size={12} className="text-primary" />
-        <p className="text-[11px] font-semibold text-primary">Support AnimeTube</p>
-      </div>
-      <p className="text-[10px] text-muted-foreground leading-relaxed mb-2.5">
-        Gratis, no login, bebas judol. Bantu kami tetap online.
-      </p>
-      <a
-        href="https://sociabuzz.com/zuax"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="block w-full text-center rounded-md bg-primary px-3 py-1.5 text-[11px] font-semibold text-primary-foreground hover:opacity-90 transition-opacity"
-      >
-        Dukung kami →
-      </a>
-    </div>
-  );
-}
 
 // ── Nav List ──────────────────────────────────────────────────────
 function NavList({ onItemClick }: { onItemClick?: () => void }) {
@@ -242,11 +158,7 @@ function NavList({ onItemClick }: { onItemClick?: () => void }) {
 
       <div className="my-2 h-px bg-border mx-3" />
 
-      {/* Anime Channels */}
-      <p className="section-label px-5 pb-1.5">Anime Channel</p>
-      <AnimeChannels onItemClick={onItemClick} />
-
-      {/* Recently watched */}
+      {/* Meta */}
       {recent.length > 0 && (
         <>
           <div className="my-2 h-px bg-border mx-3" />
