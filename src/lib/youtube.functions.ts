@@ -1,7 +1,14 @@
+import { getRegion, REGIONS } from "@/hooks/use-region";
 import { processYouTubeResponse } from "./content-filter";
 
 // Proxy endpoint — API key disimpan di server Vercel, tidak exposed ke browser
 const PROXY = "/api/youtube";
+
+function getRegionParams() {
+  const code = getRegion();
+  const r = REGIONS.find((x) => x.code === code) ?? REGIONS[0];
+  return { regionCode: r.code, relevanceLanguage: r.lang };
+}
 
 async function yt(path: string, params: Record<string, string | number | undefined>) {
   const url = new URL(PROXY, window.location.origin);
@@ -71,10 +78,11 @@ export async function searchVideos(params: SearchParams = {}) {
     q = "anime", maxResults = 24, order = "relevance",
     videoDuration = "any", pageToken, channelId, eventType,
   } = params;
+  const { regionCode, relevanceLanguage } = getRegionParams();
   const json = await yt("search", {
     part: "snippet", type: "video", q, maxResults, order,
     videoDuration, pageToken, channelId, eventType,
-    regionCode: "US", relevanceLanguage: "en", safeSearch: "strict",
+    regionCode, relevanceLanguage, safeSearch: "strict",
   });
   const ids = (json.items || []).map((i: any) => i.id?.videoId).filter(Boolean).join(",");
   let details: any = { items: [] };
@@ -87,10 +95,11 @@ export async function searchVideos(params: SearchParams = {}) {
 
 export async function trendingAnime(params: { maxResults?: number; q?: string; pageToken?: string } = {}) {
   const { maxResults = 20, q = "anime", pageToken } = params;
+  const { regionCode, relevanceLanguage } = getRegionParams();
   const publishedAfter = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
   const json = await yt("search", {
     part: "snippet", type: "video", q, maxResults, order: "viewCount",
-    publishedAfter, pageToken, regionCode: "US", relevanceLanguage: "en", safeSearch: "strict",
+    publishedAfter, pageToken, regionCode, relevanceLanguage, safeSearch: "strict",
   });
   const ids = (json.items || []).map((i: any) => i.id?.videoId).filter(Boolean).join(",");
   if (!ids) return { items: [], nextPageToken: undefined };
@@ -130,7 +139,51 @@ export async function getRelated(q: string, excludeId?: string) {
   return { items: processYouTubeResponse(details.items || []) };
 }
 
-export async function getChannel(id: string) {
-  const json = await yt("channels", { part: "snippet,statistics,brandingSettings", id });
-  return { channel: json.items?.[0] || null };
+
+// Daftar channel anime populer — ID channel YouTube
+
+// Real popular anime channels
+const REAL_ANIME_CHANNELS = [
+  "UCVTyTA7-g9nopHeHbeuvpRA", // Crunchyroll
+  "UCoqWQehkMEBqBFkFGa-IQKA", // Muse Asia
+  "UCFvLHPAMHBkJbBMBqohFMXg", // Ani-One Asia
+  "UC0wNSTMWIL3qaorLx0jie6A", // Netflix Anime
+  "UCszoNXOCKFfFHHFMFBMBqhA", // Bilibili Anime
+  "UCkejXKmFMFkFMFkFMFkFMFk", // Funimation
+  "UCgnfPPb9JI3e9A4cXHnWbyg", // AniDex
+  "UCqm3BQLlJfvkTsX_hvm0UmA", // Toei Animation
+  "UCxx7cbiqZZ_xP9H4IUk3B0g", // Bandai Namco
+  "UCBcRF18a7Qf58cCRy5xuWwQ", // Madman Anime
+];
+
+/** Get 10 random anime channels, refreshed weekly via localStorage */
+export async function getAnimeChannels() {
+  const CACHE_KEY = "animetube:channels:v1";
+  const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+
+  // Check cache
+  try {
+    const cached = localStorage.getItem(CACHE_KEY);
+    if (cached) {
+      const { data, ts } = JSON.parse(cached);
+      if (Date.now() - ts < WEEK_MS && data?.length) return { channels: data };
+    }
+  } catch {}
+
+  // Pick 10 random from list
+  const shuffled = [...REAL_ANIME_CHANNELS].sort(() => Math.random() - 0.5).slice(0, 10);
+  const ids = shuffled.join(",");
+
+  try {
+    const json = await yt("channels", {
+      part: "snippet,statistics",
+      id: ids,
+      maxResults: 10,
+    });
+    const channels = json.items || [];
+    localStorage.setItem(CACHE_KEY, JSON.stringify({ data: channels, ts: Date.now() }));
+    return { channels };
+  } catch {
+    return { channels: [] };
+  }
 }

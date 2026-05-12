@@ -46,8 +46,24 @@ function ChannelPage() {
           </div>
           <div className="mx-auto -mt-12 max-w-[1400px] px-4">
             <div className="anime-border flex flex-col items-start gap-4 rounded-2xl bg-card p-6 md:flex-row md:items-center">
-              <div className="grid h-24 w-24 place-items-center overflow-hidden rounded-full bg-[var(--gradient-primary)] text-3xl font-bold text-white shadow-[var(--shadow-glow)]">
-                {avatar ? <img src={avatar} alt="" className="h-full w-full object-cover" /> : ch?.snippet?.title?.[0]}
+              <div className="relative h-24 w-24 shrink-0">
+                {avatar ? (
+                  <img
+                    src={avatar}
+                    alt={ch?.snippet?.title || "Channel"}
+                    className="h-24 w-24 rounded-full object-cover ring-2 ring-border"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).style.display = "none";
+                      (e.target as HTMLImageElement).nextElementSibling?.removeAttribute("style");
+                    }}
+                  />
+                ) : null}
+                <div
+                  className="h-24 w-24 rounded-full bg-primary/20 grid place-items-center text-3xl font-bold text-primary"
+                  style={{ display: avatar ? "none" : "grid" }}
+                >
+                  {ch?.snippet?.title?.[0] || "?"}
+                </div>
               </div>
               <div className="flex-1 min-w-0">
                 <h1 className="font-display text-3xl font-black text-gradient">{ch?.snippet?.title || "Channel"}</h1>
