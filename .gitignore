@@ -34,3 +34,7 @@ dist-ssr
 .env.local
 .env*.local
 SETUP.md
+
+.dev.vars*
+!.dev.vars.example
+!.env.example
