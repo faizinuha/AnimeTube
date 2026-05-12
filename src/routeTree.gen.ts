@@ -9,14 +9,14 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as WatchRouteImport } from './routes/watch'
-import { Route as ShortsRouteImport } from './routes/shorts'
-import { Route as SearchRouteImport } from './routes/search'
-import { Route as LiveRouteImport } from './routes/live'
 import { Route as AboutRouteImport } from './routes/about'
-import { Route as IndexRouteImport } from './routes/index'
-import { Route as ChannelChannelIdRouteImport } from './routes/channel.$channelId'
 import { Route as CategoryGenreRouteImport } from './routes/category.$genre'
+import { Route as ChannelChannelIdRouteImport } from './routes/channel.$channelId'
+import { Route as IndexRouteImport } from './routes/index'
+import { Route as LiveRouteImport } from './routes/live'
+import { Route as SearchRouteImport } from './routes/search'
+import { Route as ShortsRouteImport } from './routes/shorts'
+import { Route as WatchRouteImport } from './routes/watch'
 
 const WatchRoute = WatchRouteImport.update({
   id: '/watch',
@@ -208,13 +208,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

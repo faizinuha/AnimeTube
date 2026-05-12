@@ -1,14 +1,8 @@
+import { AdblockDetector } from "@/components/AdblockDetector";
 import { DisclaimerModal } from "@/components/DisclaimerModal";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import {
-  createRootRouteWithContext,
-  HeadContent,
-  Link,
-  Outlet,
-  Scripts,
-} from "@tanstack/react-router";
-
-import appCss from "../styles.css?url";
+import { OfflineScreen } from "@/components/OfflineScreen";
+import { QueryClient } from "@tanstack/react-query";
+import { Link, Outlet, createRootRouteWithContext } from "@tanstack/react-router";
 
 function NotFoundComponent() {
   return (
@@ -47,65 +41,18 @@ function ErrorComponent({ error }: { error: Error }) {
 }
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
-  head: () => ({
-    meta: [
-      { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "AnimeTube — Watch Anime. Live the Story." },
-      { name: "description", content: "Stream the best anime videos. Trending series, isekai, shonen, mecha and more on AnimeTube." },
-      { name: "theme-color", content: "#0a0a0f" },
-      { name: "google-adsense-account", content: "ca-pub-3161683709161579" },
-      { property: "og:title", content: "AnimeTube — Watch Anime. Live the Story." },
-      { property: "og:description", content: "Premium anime video streaming, powered by YouTube." },
-      { property: "og:type", content: "website" },
-      { property: "og:image", content: "/logo.jpg" },
-    ],
-    links: [
-      { rel: "stylesheet", href: appCss },
-      { rel: "icon", type: "image/jpeg", href: "/logo.jpg" },
-      { rel: "apple-touch-icon", href: "/logo.jpg" },
-      { rel: "preconnect", href: "https://fonts.googleapis.com" },
-      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "" },
-      {
-        rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap",
-      },
-    ],
-    scripts: [
-      {
-        src: "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3161683709161579",
-        async: true,
-        crossOrigin: "anonymous",
-      },
-    ],
-  }),
-  shellComponent: RootShell,
   component: RootComponent,
   notFoundComponent: NotFoundComponent,
   errorComponent: ErrorComponent,
 });
 
-function RootShell({ children }: { children: React.ReactNode }) {
-  return (
-    <html lang="en" className="dark">
-      <head>
-        <HeadContent />
-      </head>
-      <body>
-        {children}
-        <Scripts />
-      </body>
-    </html>
-  );
-}
-
 function RootComponent() {
-  const { queryClient } = Route.useRouteContext();
   return (
-    <QueryClientProvider client={queryClient}>
+    <>
       <OfflineScreen />
+      <AdblockDetector />
       <DisclaimerModal />
       <Outlet />
-    </QueryClientProvider>
+    </>
   );
 }

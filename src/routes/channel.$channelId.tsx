@@ -1,3 +1,5 @@
+import { AdSlot } from "@/components/AdSlot";
+import { Footer } from "@/components/Footer";
 import { Navbar } from "@/components/Navbar";
 import { Sidebar } from "@/components/Sidebar";
 import { SkeletonCard } from "@/components/SkeletonCard";
@@ -15,20 +17,21 @@ export const Route = createFileRoute("/channel/$channelId")({
 function ChannelPage() {
   const { channelId } = Route.useParams();
   const [tab, setTab] = useState<"videos" | "about">("videos");
+
   const { data: chData } = useQuery({
     queryKey: ["channel", channelId],
-    queryFn: () => getChannel({ data: { id: channelId } }),
+    queryFn: () => getChannel(channelId),
     staleTime: 10 * 60 * 1000,
   });
   const { data: vidsData, isLoading } = useQuery({
     queryKey: ["channel-videos", channelId],
-    queryFn: () => searchVideos({ data: { q: "", channelId, order: "date", maxResults: 24 } }),
+    queryFn: () => searchVideos({ channelId, order: "date", maxResults: 24 }),
     staleTime: 5 * 60 * 1000,
   });
+
   const ch = chData?.channel;
   const banner = ch?.brandingSettings?.image?.bannerExternalUrl;
   const avatar = ch?.snippet?.thumbnails?.high?.url || ch?.snippet?.thumbnails?.default?.url;
-  const ytChannelUrl = `https://www.youtube.com/channel/${channelId}`;
 
   return (
     <div className="min-h-screen bg-background">
@@ -49,29 +52,21 @@ function ChannelPage() {
               </div>
               <div className="flex-1 min-w-0">
                 <h1 className="font-display text-3xl font-black text-gradient">{ch?.snippet?.title || "Channel"}</h1>
-                <p className="text-sm text-muted-foreground">
-                  {formatViews(ch?.statistics?.videoCount)} videos
-                </p>
+                <p className="text-sm text-muted-foreground">{formatViews(ch?.statistics?.videoCount)} videos</p>
                 <p className="mt-2 line-clamp-2 max-w-2xl text-sm text-muted-foreground">{ch?.snippet?.description}</p>
               </div>
-              <a
-                href={ytChannelUrl}
-                target="_blank" rel="noopener noreferrer"
-                className="rounded-full border border-border bg-card px-5 py-2 text-xs font-bold hover:border-primary hover:text-primary"
-              >
+              <a href={`https://www.youtube.com/channel/${channelId}`} target="_blank" rel="noopener noreferrer"
+                className="rounded-full border border-border bg-card px-5 py-2 text-xs font-bold hover:border-primary hover:text-primary">
                 Open on YouTube ↗
               </a>
             </div>
 
             <div className="mt-6 flex gap-2 border-b border-border">
               {(["videos", "about"] as const).map((t) => (
-                <button
-                  key={t}
-                  onClick={() => setTab(t)}
+                <button key={t} onClick={() => setTab(t)}
                   className={`px-4 py-2 text-sm font-bold uppercase tracking-wider transition-colors ${
                     tab === t ? "text-primary border-b-2 border-primary" : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
+                  }`}>
                   {t}
                 </button>
               ))}
@@ -80,9 +75,7 @@ function ChannelPage() {
             <div className="py-6">
               {tab === "videos" ? (
                 <>
-                  <div className="mb-4">
-                    <AdSlot id={`ad-channel-top-${channelId}`} size="leaderboard" />
-                  </div>
+                  <div className="mb-4"><AdSlot id={`ad-channel-top-${channelId}`} size="leaderboard" /></div>
                   <div className="grid gap-x-4 gap-y-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                     {isLoading
                       ? Array.from({ length: 8 }).map((_, i) => <SkeletonCard key={i} />)

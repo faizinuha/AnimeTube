@@ -1,4 +1,5 @@
 import { AdSlot } from "@/components/AdSlot";
+import { Footer } from "@/components/Footer";
 import { Navbar } from "@/components/Navbar";
 import { Sidebar } from "@/components/Sidebar";
 import { SkeletonCard } from "@/components/SkeletonCard";
@@ -7,25 +8,17 @@ import { searchVideos } from "@/lib/youtube.functions";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 
-export const Route = createFileRoute("/live")({
-  head: () => ({
-    meta: [
-      { title: "Anime Live — AnimeTube" },
-      { name: "description", content: "Live anime streams, watch parties and 24/7 anime channels." },
-    ],
-  }),
-  component: LivePage,
-});
+export const Route = createFileRoute("/live")({ component: LivePage });
 
 function LivePage() {
   const { data, isLoading } = useQuery({
     queryKey: ["live"],
-    queryFn: () => searchVideos({ data: { q: "anime live 24/7", eventType: "live", order: "viewCount", maxResults: 24 } }),
+    queryFn: () => searchVideos({ q: "anime live 24/7", eventType: "live", order: "viewCount", maxResults: 24 }),
     staleTime: 60 * 1000,
   });
   const { data: upcoming } = useQuery({
     queryKey: ["upcoming"],
-    queryFn: () => searchVideos({ data: { q: "anime premiere", eventType: "upcoming", order: "date", maxResults: 12 } }),
+    queryFn: () => searchVideos({ q: "anime premiere", eventType: "upcoming", order: "date", maxResults: 12 }),
     staleTime: 60 * 1000,
   });
   return (
@@ -45,7 +38,6 @@ function LivePage() {
               </h1>
               <span className="text-xs text-muted-foreground">Anime broadcasts streaming right now</span>
             </header>
-
             <section className="grid gap-x-4 gap-y-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {isLoading || !data
                 ? Array.from({ length: 8 }).map((_, i) => <SkeletonCard key={i} />)
@@ -53,9 +45,7 @@ function LivePage() {
                 ? <p className="col-span-full text-muted-foreground">No live anime streams right now. Check back soon.</p>
                 : data.items.map((v: any) => <VideoCard key={v.id} video={v} />)}
             </section>
-
             <AdSlot id="ad-live-mid" size="leaderboard" />
-
             {upcoming?.items?.length ? (
               <section>
                 <h2 className="font-display text-2xl font-bold mb-4">⏰ <span className="text-gradient">Upcoming premieres</span></h2>

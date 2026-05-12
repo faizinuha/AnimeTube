@@ -9,12 +9,6 @@ import { searchVideos, trendingAnime } from "@/lib/youtube.functions";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 
-const musicOpts = {
-  queryKey: ["music"],
-  queryFn: () => searchVideos({ data: { q: "anime music video", order: "viewCount", maxResults: 16 } }),
-  staleTime: 5 * 60 * 1000,
-};
-
 const HERO_LINKS = [
   { label: "Trending", query: "anime trending", badge: "Hot" },
   { label: "Shorts", query: "anime shorts", badge: "New" },
@@ -41,22 +35,16 @@ function HeroSection() {
               </p>
             </div>
             <div className="flex flex-wrap gap-3">
-              <Link
-                to="/search"
-                search={{ q: "anime" }}
-                className="inline-flex items-center gap-2 rounded-full bg-[var(--gradient-primary)] px-5 py-3 text-sm font-bold text-white shadow-[var(--shadow-glow)] transition hover:shadow-[var(--shadow-glow-strong)]"
-              >
+              <Link to="/search" search={{ q: "anime" }}
+                className="inline-flex items-center gap-2 rounded-full bg-[var(--gradient-primary)] px-5 py-3 text-sm font-bold text-white shadow-[var(--shadow-glow)] transition hover:shadow-[var(--shadow-glow-strong)]">
                 Explore Anime
               </Link>
-              <Link
-                to="/shorts"
-                className="inline-flex items-center gap-2 rounded-full border border-border bg-card/80 px-5 py-3 text-sm font-semibold text-foreground transition hover:border-primary hover:text-primary"
-              >
+              <Link to="/shorts"
+                className="inline-flex items-center gap-2 rounded-full border border-border bg-card/80 px-5 py-3 text-sm font-semibold text-foreground transition hover:border-primary hover:text-primary">
                 Enter Shorts
               </Link>
             </div>
           </div>
-
           <div className="relative grid gap-3">
             <div className="anime-border rounded-[1.75rem] border border-border bg-surface/70 p-4 backdrop-blur-xl">
               <div className="mb-4 flex items-center justify-between text-sm font-semibold text-foreground">
@@ -65,12 +53,8 @@ function HeroSection() {
               </div>
               <div className="grid gap-3">
                 {HERO_LINKS.map((item) => (
-                  <Link
-                    key={item.label}
-                    to="/search"
-                    search={{ q: item.query }}
-                    className="flex items-center justify-between rounded-3xl border border-border bg-card/80 px-4 py-3 text-sm text-foreground transition hover:border-primary hover:bg-primary/10"
-                  >
+                  <Link key={item.label} to="/search" search={{ q: item.query }}
+                    className="flex items-center justify-between rounded-3xl border border-border bg-card/80 px-4 py-3 text-sm text-foreground transition hover:border-primary hover:bg-primary/5">
                     <span>{item.label}</span>
                     <span className="rounded-full bg-primary/10 px-2 py-1 text-[11px] font-semibold text-primary">{item.badge}</span>
                   </Link>
@@ -94,15 +78,7 @@ function HeroSection() {
   );
 }
 
-export const Route = createFileRoute("/")({
-  head: () => ({
-    meta: [
-      { title: "AnimeTube — Watch anime, free, no login" },
-      { name: "description", content: "Stream the latest anime, shorts, and live broadcasts. No login required." },
-    ],
-  }),
-  component: HomePage,
-});
+export const Route = createFileRoute("/")({ component: HomePage });
 
 function ContinueWatching() {
   const { items, clear } = useWatchHistory();
@@ -117,12 +93,7 @@ function ContinueWatching() {
       </div>
       <div className="flex gap-4 overflow-x-auto pb-3 [scrollbar-width:thin]">
         {items.slice(0, 12).map((it) => (
-          <Link
-            key={it.id}
-            to="/watch"
-            search={{ v: it.id }}
-            className="group w-56 shrink-0"
-          >
+          <Link key={it.id} to="/watch" search={{ v: it.id }} className="group w-56 shrink-0">
             <div className="relative aspect-video overflow-hidden rounded-xl bg-muted anime-border">
               {it.thumb && <img src={it.thumb} alt="" loading="lazy" className="h-full w-full object-cover transition-transform group-hover:scale-110" />}
             </div>
@@ -140,7 +111,7 @@ function ForYou() {
   const q = kws.length ? kws.join(" ") : "anime";
   const { data, isLoading } = useQuery({
     queryKey: ["foryou", q],
-    queryFn: () => searchVideos({ data: { q, order: "viewCount", maxResults: 12 } }),
+    queryFn: () => searchVideos({ q, order: "viewCount", maxResults: 12 }),
     enabled: kws.length > 0,
     staleTime: 5 * 60 * 1000,
   });
@@ -161,23 +132,22 @@ function ForYou() {
 }
 
 function PopularMusic() {
-  const { data, isLoading } = useQuery(musicOpts);
+  const { data, isLoading } = useQuery({
+    queryKey: ["music"],
+    queryFn: () => searchVideos({ q: "anime music video", order: "viewCount", maxResults: 16 }),
+    staleTime: 5 * 60 * 1000,
+  });
   return (
     <section className="mb-10">
       <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <div className="flex items-center gap-3">
-            <h2 className="font-display text-xl font-bold flex items-center gap-2">
-              <span>🎵</span><span className="text-gradient">Popular music</span>
-            </h2>
-            <span className="rounded-full border border-primary/20 bg-primary/5 px-2 py-1 text-[11px] font-semibold text-primary">Recommended</span>
-          </div>
+        <div className="flex items-center gap-3">
+          <h2 className="font-display text-xl font-bold flex items-center gap-2">
+            <span>🎵</span><span className="text-gradient">Popular music</span>
+          </h2>
+          <span className="rounded-full border border-primary/20 bg-primary/5 px-2 py-1 text-[11px] font-semibold text-primary">Recommended</span>
         </div>
-        <Link
-          to="/search"
-          search={{ q: "anime music video" }}
-          className="inline-flex items-center gap-2 rounded-full border border-border px-4 py-2 text-sm font-semibold text-foreground transition hover:border-primary hover:text-primary"
-        >
+        <Link to="/search" search={{ q: "anime music video" }}
+          className="inline-flex items-center gap-2 rounded-full border border-border px-4 py-2 text-sm font-semibold text-foreground transition hover:border-primary hover:text-primary">
           See all music
         </Link>
       </div>
@@ -197,43 +167,26 @@ function PopularMusic() {
 function ShortsPreview() {
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } = useInfiniteQuery({
     queryKey: ["shorts-home-infinite"],
-    queryFn: ({ pageParam }) =>
-      searchVideos({
-        data: {
-          q: "anime shorts",
-          videoDuration: "short",
-          order: "viewCount",
-          maxResults: 20,
-          pageToken: pageParam as string | undefined,
-        },
-      }),
+    queryFn: ({ pageParam }) => searchVideos({ q: "anime shorts", videoDuration: "short", order: "viewCount", maxResults: 20, pageToken: pageParam as string | undefined }),
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (last: any) => last.nextPageToken ?? undefined,
     staleTime: 5 * 60 * 1000,
   });
-
   const allItems = data?.pages.flatMap((p: any) => p.items) ?? [];
-
   return (
     <section className="mb-10">
       <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h2 className="font-display text-xl font-bold flex items-center gap-2">
-            <span>⚡</span><span className="text-gradient">Shorts</span>
-          </h2>
+          <h2 className="font-display text-xl font-bold flex items-center gap-2"><span>⚡</span><span className="text-gradient">Shorts</span></h2>
           <p className="text-sm text-muted-foreground">Short anime clips, edits, and trending micro-videos.</p>
         </div>
-        <Link
-          to="/shorts"
-          className="inline-flex items-center gap-2 rounded-full border border-border px-4 py-2 text-sm font-semibold text-foreground transition hover:border-primary hover:text-primary"
-        >
+        <Link to="/shorts" className="inline-flex items-center gap-2 rounded-full border border-border px-4 py-2 text-sm font-semibold text-foreground transition hover:border-primary hover:text-primary">
           Open Shorts
         </Link>
       </div>
       <InfiniteScroll onLoadMore={() => fetchNextPage()} hasMore={!!hasNextPage} loading={isFetchingNextPage}>
         <div className="grid gap-x-4 gap-y-8 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-          {isLoading
-            ? Array.from({ length: 12 }).map((_, i) => <SkeletonCard key={i} />)
+          {isLoading ? Array.from({ length: 12 }).map((_, i) => <SkeletonCard key={i} />)
             : allItems.flatMap((v: any, i: number) => {
                 const card = <VideoCard key={v.id + i} video={v} />;
                 if (i === 9) return [card, <div key="ad-shorts-home" className="col-span-1"><AdSlot id="ad-home-shorts" /></div>];
@@ -249,44 +202,26 @@ function ShortsPreview() {
 function Trending() {
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } = useInfiniteQuery({
     queryKey: ["trending-infinite"],
-    queryFn: ({ pageParam }) =>
-      trendingAnime({
-        data: {
-          maxResults: 20,
-          q: "anime",
-          pageToken: pageParam as string | undefined,
-        },
-      }),
+    queryFn: ({ pageParam }) => trendingAnime({ maxResults: 20, q: "anime", pageToken: pageParam as string | undefined }),
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (last: any) => last.nextPageToken ?? undefined,
     staleTime: 5 * 60 * 1000,
   });
-
   const allItems = data?.pages.flatMap((p: any) => p.items) ?? [];
-
   return (
     <section className="mb-10">
       <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <div className="flex items-center gap-3">
-            <h2 className="font-display text-xl font-bold flex items-center gap-2">
-              <span>🔥</span><span className="text-gradient">Trending now</span>
-            </h2>
-            <span className="rounded-full border border-primary/20 bg-primary/5 px-2 py-1 text-[11px] font-semibold text-primary">Recommended</span>
-          </div>
+        <div className="flex items-center gap-3">
+          <h2 className="font-display text-xl font-bold flex items-center gap-2"><span>🔥</span><span className="text-gradient">Trending now</span></h2>
+          <span className="rounded-full border border-primary/20 bg-primary/5 px-2 py-1 text-[11px] font-semibold text-primary">Recommended</span>
         </div>
-        <Link
-          to="/search"
-          search={{ q: "anime" }}
-          className="inline-flex items-center gap-2 rounded-full border border-border px-4 py-2 text-sm font-semibold text-foreground transition hover:border-primary hover:text-primary"
-        >
+        <Link to="/search" search={{ q: "anime" }} className="inline-flex items-center gap-2 rounded-full border border-border px-4 py-2 text-sm font-semibold text-foreground transition hover:border-primary hover:text-primary">
           Browse all anime
         </Link>
       </div>
       <InfiniteScroll onLoadMore={() => fetchNextPage()} hasMore={!!hasNextPage} loading={isFetchingNextPage}>
         <div className="grid gap-x-4 gap-y-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {isLoading
-            ? Array.from({ length: 12 }).map((_, i) => <SkeletonCard key={i} />)
+          {isLoading ? Array.from({ length: 12 }).map((_, i) => <SkeletonCard key={i} />)
             : allItems.flatMap((v: any, i: number) => {
                 const card = <VideoCard key={v.id + i} video={v} />;
                 if (i === 7) return [card, <div key="ad" className="col-span-1"><AdSlot id="ad-home-feed" /></div>];
