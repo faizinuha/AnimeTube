@@ -1,7 +1,7 @@
-import { Link } from "@tanstack/react-router";
-import { GENRES } from "@/lib/constants";
 import { useSidebar } from "@/hooks/use-sidebar";
 import { useWatchHistory } from "@/hooks/use-watch-history";
+import { GENRES } from "@/lib/constants";
+import { Link } from "@tanstack/react-router";
 
 const MAIN = [
   { to: "/", label: "Home", icon: "🏠" },
@@ -17,6 +17,25 @@ const META = [
   { to: "/about", label: "Privacy", icon: "🔐", hash: "privacy" },
   { to: "/about", label: "Terms", icon: "📜", hash: "terms" },
 ] as const;
+
+function SupportBanner() {
+  return (
+    <div className="mx-3 my-3 rounded-xl border border-primary/20 bg-primary/5 p-3">
+      <p className="text-[11px] font-bold text-primary mb-1">☕ Support AnimeTube</p>
+      <p className="text-[10px] text-muted-foreground leading-relaxed mb-2">
+        Gratis, no login, bebas judol. Bantu kami tetap online~
+      </p>
+      <a
+        href="https://sociabuzz.com/zuax"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="block w-full text-center rounded-lg bg-[var(--gradient-primary)] px-3 py-1.5 text-[11px] font-bold text-white shadow-[var(--shadow-glow)] hover:shadow-[var(--shadow-glow-strong)] transition"
+      >
+        Dukung via Sociabuzz →
+      </a>
+    </div>
+  );
+}
 
 function NavList({ onItemClick }: { onItemClick?: () => void }) {
   const { items: history } = useWatchHistory();
@@ -88,6 +107,7 @@ function NavList({ onItemClick }: { onItemClick?: () => void }) {
       )}
 
       <div className="my-3 h-px bg-border mx-3" />
+
       <div className="px-5 pb-2 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
         More
       </div>
@@ -106,7 +126,10 @@ function NavList({ onItemClick }: { onItemClick?: () => void }) {
         ))}
       </nav>
 
-      <div className="px-5 py-4 text-[10px] text-muted-foreground/70 leading-relaxed">
+      {/* Support banner — compact, di bawah More */}
+      <SupportBanner />
+
+      <div className="px-5 pb-4 text-[10px] text-muted-foreground/50 leading-relaxed">
         © {new Date().getFullYear()} AnimeTube<br />
         Powered by YouTube Data API
       </div>

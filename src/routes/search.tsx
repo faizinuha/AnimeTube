@@ -1,5 +1,4 @@
 import { AdSlot } from "@/components/AdSlot";
-import { Footer } from "@/components/Footer";
 import { InfiniteScroll } from "@/components/InfiniteScroll";
 import { Navbar } from "@/components/Navbar";
 import { Sidebar } from "@/components/Sidebar";
@@ -80,7 +79,6 @@ function SearchPage() {
             )}
             {allItems.length >= 12 && <div className="mt-8"><AdSlot id="ad-search-bottom" size="leaderboard" /></div>}
           </div>
-          <Footer showAd />
         </main>
       </div>
     </div>

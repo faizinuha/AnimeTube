@@ -1,5 +1,4 @@
 import { AdSlot } from "@/components/AdSlot";
-import { Footer } from "@/components/Footer";
 import { Navbar } from "@/components/Navbar";
 import { Sidebar } from "@/components/Sidebar";
 import { SkeletonCard } from "@/components/SkeletonCard";
@@ -55,7 +54,6 @@ function LivePage() {
               </section>
             ) : null}
           </div>
-          <Footer showAd />
         </main>
       </div>
     </div>

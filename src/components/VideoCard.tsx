@@ -1,12 +1,31 @@
+import { formatDuration, formatViews, timeAgo, type YTVideo } from "@/lib/format";
 import { Link } from "@tanstack/react-router";
-import { formatViews, formatDuration, timeAgo, type YTVideo } from "@/lib/format";
+import { useState } from "react";
+
+function Thumb({ src, alt, className }: { src: string; alt: string; className?: string }) {
+  const [loaded, setLoaded] = useState(false);
+  return (
+    <>
+      {!loaded && <div className="skeleton absolute inset-0" />}
+      <img
+        src={src}
+        alt={alt}
+        loading="lazy"
+        decoding="async"
+        onLoad={() => setLoaded(true)}
+        className={`h-full w-full object-cover transition-all duration-300 ${loaded ? "opacity-100" : "opacity-0"} ${className ?? ""}`}
+      />
+    </>
+  );
+}
 
 export function VideoCard({ video, variant = "grid" }: { video: YTVideo; variant?: "grid" | "compact" }) {
   const id = typeof video.id === "string" ? video.id : (video as any).id?.videoId;
+  // Prefer medium/high over maxres — faster load, good enough quality
   const thumb =
-    video.snippet.thumbnails?.maxres?.url ||
     video.snippet.thumbnails?.high?.url ||
-    video.snippet.thumbnails?.medium?.url;
+    video.snippet.thumbnails?.medium?.url ||
+    video.snippet.thumbnails?.maxres?.url;
   const duration = formatDuration(video.contentDetails?.duration);
 
   if (variant === "compact") {
@@ -18,8 +37,11 @@ export function VideoCard({ video, variant = "grid" }: { video: YTVideo; variant
       >
         <div className="relative h-20 w-36 shrink-0 overflow-hidden rounded-lg bg-muted">
           {thumb && (
-            <img src={thumb} alt={video.snippet.title} loading="lazy"
-              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" />
+            <Thumb
+              src={thumb}
+              alt={video.snippet.title}
+              className="transition-transform duration-500 group-hover:scale-110"
+            />
           )}
           {duration && (
             <span className="absolute bottom-1 right-1 rounded bg-black/85 px-1.5 py-0.5 text-[10px] font-semibold text-white">
@@ -48,8 +70,11 @@ export function VideoCard({ video, variant = "grid" }: { video: YTVideo; variant
     >
       <div className="relative aspect-video overflow-hidden bg-muted">
         {thumb && (
-          <img src={thumb} alt={video.snippet.title} loading="lazy"
-            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" />
+          <Thumb
+            src={thumb}
+            alt={video.snippet.title}
+            className="transition-transform duration-500 group-hover:scale-110"
+          />
         )}
         <div className="glitch-stripes pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
         {duration && (

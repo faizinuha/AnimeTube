@@ -1,5 +1,4 @@
 import { AdSlot } from "@/components/AdSlot";
-import { Footer } from "@/components/Footer";
 import { InfiniteScroll } from "@/components/InfiniteScroll";
 import { Navbar } from "@/components/Navbar";
 import { Sidebar } from "@/components/Sidebar";
@@ -43,7 +42,7 @@ function ShortsPage() {
               </div>
             </InfiniteScroll>
           </div>
-          <Footer showAd />
+          </div>
         </main>
       </div>
     </div>

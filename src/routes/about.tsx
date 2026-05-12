@@ -1,4 +1,5 @@
 import { AdSlot } from "@/components/AdSlot";
+import { Footer } from "@/components/Footer";
 import { Navbar } from "@/components/Navbar";
 import { Sidebar } from "@/components/Sidebar";
 import { createFileRoute, Link } from "@tanstack/react-router";
@@ -86,13 +87,35 @@ function AboutPage() {
 
             <AdSlot id="ad-about-bottom" size="leaderboard" />
 
+            {/* Support Banner */}
+            <div className="anime-border rounded-2xl bg-gradient-to-br from-primary/10 via-card/80 to-card/60 p-6 shadow-[var(--shadow-glow)]">
+              <div className="flex flex-col sm:flex-row items-center gap-5">
+                <div className="text-4xl">💖</div>
+                <div className="flex-1 text-center sm:text-left">
+                  <h3 className="font-display text-xl font-black text-gradient">Bantu Kami Tetap Online!</h3>
+                  <p className="mt-1 text-sm text-muted-foreground leading-relaxed">
+                    AnimeTube adalah proyek <strong>non-profit</strong> — gratis, tanpa iklan judol, aman untuk semua umur.
+                    Setiap donasi digunakan untuk biaya server & API agar tetap bisa jalan.
+                  </p>
+                </div>
+                <a
+                  href="https://sociabuzz.com/zuax"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="shrink-0 inline-flex items-center gap-2 rounded-full bg-[var(--gradient-primary)] px-5 py-2.5 text-sm font-bold text-white shadow-[var(--shadow-glow)] hover:shadow-[var(--shadow-glow-strong)] transition"
+                >
+                  ☕ Support via Sociabuzz
+                </a>
+              </div>
+            </div>
+
             <div className="text-center">
               <Link to="/" className="text-primary underline">← Back home</Link>
             </div>
           </div>
         </main>
       </div>
-      <Footer showAd />
+      <Footer />
     </div>
   );
 }
