@@ -1,0 +1,7 @@
+# Default: auto line endings
+* text=auto
+
+# Force LF for these files — AdSense & crawlers require Unix line endings
+public/ads.txt text eol=lf
+public/robots.txt text eol=lf
+public/sitemap.xml text eol=lf
