@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+
+# Sitemap location
+Sitemap: https://animtubev1.vercel.app/sitemap.xml
+
+# Block irrelevant paths
+Disallow: /src/
+Disallow: /*.json$
