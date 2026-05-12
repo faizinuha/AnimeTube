@@ -8,10 +8,11 @@ import "./styles.css";
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 15 * 60 * 1000,   // 15 menit — hemat quota
-      gcTime: 30 * 60 * 1000,       // 30 menit cache di memory
+      staleTime: 15 * 60 * 1000,      // 15 menit — data dianggap fresh, tidak re-fetch
+      gcTime: 60 * 60 * 1000,          // 1 jam cache di memory — data tetap ada saat navigasi
+      refetchOnWindowFocus: false,      // Tidak re-fetch saat tab di-focus — hemat quota
+      refetchOnReconnect: false,        // Tidak re-fetch saat reconnect
       retry: (failureCount, error: any) => {
-        // Jangan retry kalau 403 atau quota error — buang-buang quota
         if (error?.message?.includes("403") || error?.message?.includes("quota")) return false;
         return failureCount < 1;
       },
@@ -23,6 +24,7 @@ const router = createRouter({
   routeTree,
   context: { queryClient },
   defaultPreloadStaleTime: 0,
+  defaultPreload: "intent",   // Prefetch saat hover link — data sudah siap sebelum klik
   scrollRestoration: true,
 });
 

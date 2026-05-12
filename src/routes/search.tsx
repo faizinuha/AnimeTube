@@ -66,9 +66,9 @@ function SearchPage() {
             </div>
             <InfiniteScroll onLoadMore={() => fetchNextPage()} hasMore={!!hasNextPage} loading={isFetchingNextPage}>
               <div className="mt-6 grid gap-x-4 gap-y-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {isLoading ? Array.from({ length: 9 }).map((_, i) => <SkeletonCard key={i} />)
+                {isLoading ? Array.from({ length: 9 }).map((_, i) => <SkeletonCard key={i} index={i} />)
                   : allItems.map((v: any, i: number) => <VideoCard key={v.id + i} video={v} />)}
-                {isFetchingNextPage && Array.from({ length: 4 }).map((_, i) => <SkeletonCard key={"sk" + i} />)}
+                {isFetchingNextPage && Array.from({ length: 4 }).map((_, i) => <SkeletonCard key={"sk" + i} index={i} />)}
               </div>
             </InfiniteScroll>
             {!isLoading && allItems.length === 0 && q && (

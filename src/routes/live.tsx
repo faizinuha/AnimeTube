@@ -39,7 +39,7 @@ function LivePage() {
             </header>
             <section className="grid gap-x-4 gap-y-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {isLoading || !data
-                ? Array.from({ length: 8 }).map((_, i) => <SkeletonCard key={i} />)
+                ? Array.from({ length: 8 }).map((_, i) => <SkeletonCard key={i} index={i} />)
                 : data.items.length === 0
                 ? <p className="col-span-full text-muted-foreground">No live anime streams right now. Check back soon.</p>
                 : data.items.map((v: any) => <VideoCard key={v.id} video={v} />)}

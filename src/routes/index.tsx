@@ -124,7 +124,7 @@ function ForYou() {
       </h2>
       <div className="grid gap-x-4 gap-y-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {isLoading || !data
-          ? Array.from({ length: 4 }).map((_, i) => <SkeletonCard key={i} />)
+          ? Array.from({ length: 4 }).map((_, i) => <SkeletonCard key={i} index={i} />)
           : data.items.slice(0, 8).map((v: any) => <VideoCard key={v.id} video={v} />)}
       </div>
     </section>
@@ -153,7 +153,7 @@ function PopularMusic() {
       </div>
       <div className="grid gap-x-4 gap-y-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {isLoading || !data
-          ? Array.from({ length: 8 }).map((_, i) => <SkeletonCard key={i} />)
+          ? Array.from({ length: 8 }).map((_, i) => <SkeletonCard key={i} index={i} />)
           : data.items.flatMap((v: any, i: number) => {
               const card = <VideoCard key={v.id} video={v} />;
               if (i === 7) return [card, <div key="ad-music" className="col-span-1"><AdSlot id="ad-home-music" /></div>];
@@ -186,13 +186,13 @@ function ShortsPreview() {
       </div>
       <InfiniteScroll onLoadMore={() => fetchNextPage()} hasMore={!!hasNextPage} loading={isFetchingNextPage}>
         <div className="grid gap-x-4 gap-y-8 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-          {isLoading ? Array.from({ length: 12 }).map((_, i) => <SkeletonCard key={i} />)
+          {isLoading ? Array.from({ length: 12 }).map((_, i) => <SkeletonCard key={i} index={i} />)
             : allItems.flatMap((v: any, i: number) => {
                 const card = <VideoCard key={v.id + i} video={v} />;
                 if (i === 9) return [card, <div key="ad-shorts-home" className="col-span-1"><AdSlot id="ad-home-shorts" /></div>];
                 return [card];
               })}
-          {isFetchingNextPage && Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={"sk" + i} />)}
+          {isFetchingNextPage && Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={"sk" + i} index={i} />)}
         </div>
       </InfiniteScroll>
     </section>
@@ -221,14 +221,14 @@ function Trending() {
       </div>
       <InfiniteScroll onLoadMore={() => fetchNextPage()} hasMore={!!hasNextPage} loading={isFetchingNextPage}>
         <div className="grid gap-x-4 gap-y-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {isLoading ? Array.from({ length: 12 }).map((_, i) => <SkeletonCard key={i} />)
+          {isLoading ? Array.from({ length: 12 }).map((_, i) => <SkeletonCard key={i} index={i} />)
             : allItems.flatMap((v: any, i: number) => {
                 const card = <VideoCard key={v.id + i} video={v} />;
                 if (i === 7) return [card, <div key="ad" className="col-span-1"><AdSlot id="ad-home-feed" /></div>];
                 if (i === 19) return [card, <div key="ad2" className="col-span-1"><AdSlot id="ad-home-feed-2" /></div>];
                 return [card];
               })}
-          {isFetchingNextPage && Array.from({ length: 4 }).map((_, i) => <SkeletonCard key={"sk" + i} />)}
+          {isFetchingNextPage && Array.from({ length: 4 }).map((_, i) => <SkeletonCard key={"sk" + i} index={i} />)}
         </div>
       </InfiniteScroll>
     </section>
