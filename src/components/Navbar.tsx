@@ -3,6 +3,7 @@ import { useTheme } from "@/hooks/use-theme";
 import { topKeywords, trackSearch, useRecentSearches } from "@/hooks/use-watch-history";
 import { GENRES } from "@/lib/constants";
 import { Link, useNavigate } from "@tanstack/react-router";
+import { Menu, Moon, Search, Sun } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 const POPULAR = [
@@ -64,9 +65,7 @@ export function Navbar() {
           aria-label="Open menu"
           className="lg:hidden grid h-9 w-9 shrink-0 place-items-center rounded-lg text-muted-foreground hover:bg-surface hover:text-foreground transition-colors"
         >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M3 6h18M3 12h18M3 18h18" />
-          </svg>
+          <Menu size={20} />
         </button>
 
         {/* Logo */}
@@ -83,12 +82,7 @@ export function Navbar() {
         <div ref={wrapRef} className="flex-1 max-w-xl relative">
           <form onSubmit={(e) => { e.preventDefault(); submit(q); }}>
             <div className="relative">
-              <svg
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-                width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
-              >
-                <circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" />
-              </svg>
+              <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
               <input
                 type="search"
                 value={q}
@@ -111,9 +105,7 @@ export function Navbar() {
                       onMouseDown={(e) => { e.preventDefault(); submit(s); }}
                       className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm text-foreground hover:bg-surface transition-colors"
                     >
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-muted-foreground shrink-0">
-                        <circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" />
-                      </svg>
+                      <Search size={13} className="text-muted-foreground shrink-0" />
                       <span className="truncate">{s}</span>
                     </button>
                   </li>
@@ -128,9 +120,9 @@ export function Navbar() {
           <button
             onClick={toggle}
             aria-label="Toggle theme"
-            className="grid h-9 w-9 place-items-center rounded-lg border border-border bg-surface text-muted-foreground hover:text-foreground hover:border-primary/40 transition-all text-base"
+            className="grid h-9 w-9 place-items-center rounded-lg border border-border bg-surface text-muted-foreground hover:text-foreground hover:border-primary/40 transition-all"
           >
-            {theme === "dark" ? "☀️" : "🌙"}
+            {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
           </button>
         </div>
       </div>
