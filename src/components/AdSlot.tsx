@@ -1,9 +1,7 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 // Google AdSense — ca-pub-3161683709161579
-// All ad slots are served by Google's network.
-// Google automatically filters out gambling, adult, and prohibited content
-// based on the site's content policy and AdSense program policies.
+// Slots are hidden until Google fills them to avoid blank white boxes.
 
 declare global {
   interface Window {
@@ -13,25 +11,10 @@ declare global {
 
 type AdSize = "leaderboard" | "rectangle" | "inline";
 
-const SIZE_MAP: Record<AdSize, { slot: string; format: string; style: React.CSSProperties }> = {
-  // 728×90 leaderboard — used between sections
-  leaderboard: {
-    slot: "auto",
-    format: "auto",
-    style: { display: "block", minHeight: 90 },
-  },
-  // 300×250 rectangle — used in sidebar / feed
-  rectangle: {
-    slot: "auto",
-    format: "auto",
-    style: { display: "block", minHeight: 250 },
-  },
-  // Responsive inline — used inside content grids
-  inline: {
-    slot: "auto",
-    format: "fluid",
-    style: { display: "block" },
-  },
+const FORMAT_MAP: Record<AdSize, string> = {
+  leaderboard: "auto",
+  rectangle: "auto",
+  inline: "fluid",
 };
 
 export function AdSlot({
@@ -46,9 +29,10 @@ export function AdSlot({
   sticky?: boolean;
   className?: string;
 }) {
-  const adRef = useRef<HTMLModElement>(null);
+  const insRef = useRef<HTMLModElement>(null);
   const pushed = useRef(false);
-  const { style, format } = SIZE_MAP[size];
+  // Track whether Google has filled the slot
+  const [filled, setFilled] = useState(false);
 
   useEffect(() => {
     if (pushed.current) return;
@@ -56,23 +40,40 @@ export function AdSlot({
       (window.adsbygoogle = window.adsbygoogle || []).push({});
       pushed.current = true;
     } catch {
-      // AdSense not loaded yet — silently ignore
+      // AdSense script not loaded yet
     }
+
+    // Check after a short delay if Google filled the slot
+    // adsbygoogle sets data-ad-status="filled" or "unfilled"
+    const timer = setTimeout(() => {
+      const status = insRef.current?.getAttribute("data-ad-status");
+      if (status === "filled") setFilled(true);
+      // If unfilled or no status, stay hidden — no blank box
+    }, 2000);
+
+    return () => clearTimeout(timer);
   }, []);
+
+  // Hide completely if not filled — no blank white space
+  if (!filled && typeof window !== "undefined" && pushed.current) {
+    // Still render but invisible so Google can fill it
+  }
 
   return (
     <aside
       aria-label="Advertisement"
       data-ad-id={id}
-      className={`overflow-hidden rounded-xl ${sticky ? "sticky top-20" : ""} ${className}`}
+      className={`overflow-hidden rounded-xl transition-all ${sticky ? "sticky top-20" : ""} ${className}`}
+      // Hide the container until Google fills it
+      style={{ display: filled ? "block" : "none" }}
     >
       <ins
-        ref={adRef}
+        ref={insRef}
         className="adsbygoogle"
-        style={style}
+        style={{ display: "block" }}
         data-ad-client="ca-pub-3161683709161579"
         data-ad-slot="auto"
-        data-ad-format={format}
+        data-ad-format={FORMAT_MAP[size]}
         data-full-width-responsive="true"
       />
     </aside>
