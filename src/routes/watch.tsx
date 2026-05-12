@@ -47,7 +47,6 @@ function VideoMain({ autoNextId }: { autoNextId: string | null }) {
   });
   const video = data?.item;
   const [showFull, setShowFull] = useState(false);
-  const [autoNextId, setAutoNextId] = useState<string | null>(null);
   const [countdown, setCountdown] = useState<number | null>(null);
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
