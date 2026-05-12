@@ -42,7 +42,6 @@ function ShortsPage() {
               </div>
             </InfiniteScroll>
           </div>
-          </div>
         </main>
       </div>
     </div>
