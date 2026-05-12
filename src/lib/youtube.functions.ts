@@ -2,10 +2,15 @@ import { processYouTubeResponse } from "./content-filter";
 
 const API = "https://www.googleapis.com/youtube/v3";
 
-// In SPA mode, API key must be prefixed with VITE_ to be exposed to the browser
 function getKey(): string {
   const key = import.meta.env.VITE_YOUTUBE_API_KEY as string | undefined;
-  if (!key) throw new Error("VITE_YOUTUBE_API_KEY not configured");
+  if (!key || key === "your_youtube_api_key_here") {
+    throw new Error(
+      "VITE_YOUTUBE_API_KEY belum diset. " +
+      "Untuk local: buat file .env dan isi VITE_YOUTUBE_API_KEY=xxx. " +
+      "Untuk Vercel: tambahkan di Settings > Environment Variables."
+    );
+  }
   return key;
 }
 
@@ -18,7 +23,13 @@ async function yt(path: string, params: Record<string, string | number | undefin
   const res = await fetch(url.toString());
   if (!res.ok) {
     const text = await res.text();
-    throw new Error(`YouTube API ${res.status}: ${text.slice(0, 200)}`);
+    let message = `YouTube API ${res.status}`;
+    if (res.status === 403) {
+      message = "quota|403: API key tidak valid, domain belum di-whitelist, atau quota habis";
+    } else if (res.status === 429) {
+      message = "quota|429: Quota harian habis (10.000 units/hari)";
+    }
+    throw new Error(message + ": " + text.slice(0, 200));
   }
   return res.json();
 }

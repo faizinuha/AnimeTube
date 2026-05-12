@@ -6,14 +6,21 @@ import tsConfigPaths from "vite-tsconfig-paths";
 
 export default defineConfig({
   plugins: [
-    TanStackRouterVite({ routesDirectory: "./src/routes", generatedRouteTree: "./src/routeTree.gen.ts" }),
+    TanStackRouterVite({
+      routesDirectory: "./src/routes",
+      generatedRouteTree: "./src/routeTree.gen.ts",
+    }),
     tailwindcss(),
     tsConfigPaths({ projects: ["./tsconfig.json"] }),
     react(),
   ],
+  envPrefix: "VITE_",
   resolve: {
     alias: { "@": "/src" },
-    dedupe: ["react", "react-dom", "react/jsx-runtime", "react/jsx-dev-runtime", "@tanstack/react-query", "@tanstack/query-core"],
+    dedupe: [
+      "react", "react-dom", "react/jsx-runtime",
+      "react/jsx-dev-runtime", "@tanstack/react-query", "@tanstack/query-core",
+    ],
   },
   server: { host: true, port: 5173 },
   build: { outDir: "dist" },

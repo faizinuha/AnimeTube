@@ -6,7 +6,17 @@ import { routeTree } from "./routeTree.gen";
 import "./styles.css";
 
 const queryClient = new QueryClient({
-  defaultOptions: { queries: { staleTime: 5 * 60 * 1000, retry: 1 } },
+  defaultOptions: {
+    queries: {
+      staleTime: 15 * 60 * 1000,   // 15 menit — hemat quota
+      gcTime: 30 * 60 * 1000,       // 30 menit cache di memory
+      retry: (failureCount, error: any) => {
+        // Jangan retry kalau 403 atau quota error — buang-buang quota
+        if (error?.message?.includes("403") || error?.message?.includes("quota")) return false;
+        return failureCount < 1;
+      },
+    },
+  },
 });
 
 const router = createRouter({
