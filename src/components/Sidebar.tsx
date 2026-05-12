@@ -107,6 +107,29 @@ function RegionSelector({ onClose }: { onClose?: () => void }) {
 
 // ── Support Banner ────────────────────────────────────────────────
 
+// ── Support Banner ────────────────────────────────────────────────
+function SupportBanner() {
+  return (
+    <div className="mx-3 my-2 rounded-lg bg-primary/8 border border-primary/15 p-3">
+      <div className="flex items-center gap-1.5 mb-1.5">
+        <Coffee size={12} className="text-primary" />
+        <p className="text-[11px] font-semibold text-primary">Support AnimeTube</p>
+      </div>
+      <p className="text-[10px] text-muted-foreground leading-relaxed mb-2.5">
+        Gratis, no login, bebas judol. Bantu kami tetap online.
+      </p>
+      <a
+        href="https://sociabuzz.com/zuax"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="block w-full text-center rounded-md bg-primary px-3 py-1.5 text-[11px] font-semibold text-primary-foreground hover:opacity-90 transition-opacity"
+      >
+        Dukung kami →
+      </a>
+    </div>
+  );
+}
+
 // ── Nav List ──────────────────────────────────────────────────────
 function NavList({ onItemClick }: { onItemClick?: () => void }) {
   const { items: history } = useWatchHistory();
