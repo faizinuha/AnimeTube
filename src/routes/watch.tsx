@@ -9,9 +9,9 @@ import { trackWatch } from "@/hooks/use-watch-history";
 import { formatViews, timeAgo } from "@/lib/format";
 import { getComments, getRelated, getVideo } from "@/lib/youtube.functions";
 import { useQuery } from "@tanstack/react-query";
-import { Link, createFileRoute } from "@tanstack/react-router";
+import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 import { fallback, zodValidator } from "@tanstack/zod-adapter";
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { z } from "zod";
 
 const searchSchema = z.object({
@@ -37,8 +37,9 @@ function ActionButton({
   return <button onClick={onClick} className={cls}><span>{icon}</span> <span>{label}</span></button>;
 }
 
-function VideoMain() {
+function VideoMain({ autoNextId }: { autoNextId: string | null }) {
   const { v } = Route.useSearch();
+  const navigate = useNavigate();
   const { data, isLoading } = useQuery({
     queryKey: ["video", v],
     queryFn: () => getVideo(v),
@@ -46,6 +47,9 @@ function VideoMain() {
   });
   const video = data?.item;
   const [showFull, setShowFull] = useState(false);
+  const [autoNextId, setAutoNextId] = useState<string | null>(null);
+  const [countdown, setCountdown] = useState<number | null>(null);
+  const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     if (!video) return;
@@ -58,12 +62,49 @@ function VideoMain() {
     });
   }, [v, video]);
 
+  // Listen for YouTube iframe postMessage — detect video ended
+  useEffect(() => {
+    const onMessage = (e: MessageEvent) => {
+      if (e.origin !== "https://www.youtube.com") return;
+      try {
+        const data = typeof e.data === "string" ? JSON.parse(e.data) : e.data;
+        // YT iframe API: info.playerState === 0 means ended
+        if (data?.event === "infoDelivery" && data?.info?.playerState === 0) {
+          if (autoNextId) startCountdown(autoNextId);
+        }
+      } catch {}
+    };
+    window.addEventListener("message", onMessage);
+    return () => window.removeEventListener("message", onMessage);
+  }, [autoNextId]);
+
+  const startCountdown = (nextId: string) => {
+    setCountdown(5);
+    countdownRef.current = setInterval(() => {
+      setCountdown((c) => {
+        if (c === null || c <= 1) {
+          clearInterval(countdownRef.current!);
+          navigate({ to: "/watch", search: { v: nextId } });
+          return null;
+        }
+        return c - 1;
+      });
+    }, 1000);
+  };
+
+  const cancelCountdown = () => {
+    if (countdownRef.current) clearInterval(countdownRef.current);
+    setCountdown(null);
+  };
+
+  // Cleanup on unmount
+  useEffect(() => () => { if (countdownRef.current) clearInterval(countdownRef.current); }, []);
+
   if (isLoading) return <div className="aspect-video skeleton rounded-xl" />;
 
   if (!video) {
     return (
       <div className="rounded-xl border border-border bg-card p-8 text-center">
-        <div className="text-6xl">🎴</div>
         <p className="mt-4 text-muted-foreground">Video not found.</p>
         <Link to="/" className="mt-4 inline-block text-primary underline">Go home</Link>
       </div>
@@ -75,11 +116,11 @@ function VideoMain() {
 
   return (
     <div>
-      <div className="anime-border overflow-hidden rounded-xl shadow-[var(--shadow-glow)]">
+      <div className="overflow-hidden rounded-xl">
         <div className="relative aspect-video bg-black">
           <iframe
             key={v}
-            src={`https://www.youtube.com/embed/${v}?autoplay=1&rel=0&modestbranding=1&iv_load_policy=3&color=white&controls=1`}
+            src={`https://www.youtube.com/embed/${v}?autoplay=1&rel=0&modestbranding=1&iv_load_policy=3&controls=1&enablejsapi=1&origin=${encodeURIComponent(window.location.origin)}`}
             title={video.snippet.title}
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
             allowFullScreen
@@ -87,6 +128,29 @@ function VideoMain() {
           />
         </div>
       </div>
+
+      {/* Auto-next countdown banner */}
+      {countdown !== null && autoNextId && (
+        <div className="mt-3 flex items-center justify-between rounded-lg bg-surface border border-border px-4 py-3">
+          <span className="text-sm text-foreground">
+            Video berikutnya dalam <strong className="text-primary">{countdown}s</strong>...
+          </span>
+          <div className="flex gap-2">
+            <button
+              onClick={cancelCountdown}
+              className="rounded-md border border-border px-3 py-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Batal
+            </button>
+            <button
+              onClick={() => { cancelCountdown(); navigate({ to: "/watch", search: { v: autoNextId } }); }}
+              className="rounded-md bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground hover:opacity-90 transition-opacity"
+            >
+              Putar sekarang
+            </button>
+          </div>
+        </div>
+      )}
 
       <h1 className="mt-4 font-display text-2xl font-bold leading-tight md:text-3xl">{video.snippet.title}</h1>
 
@@ -109,12 +173,12 @@ function VideoMain() {
       </div>
 
       <p className="mt-2 text-[10px] text-muted-foreground/70">
-        Like / Dislike redirect to YouTube — AnimeTube has no login, so you can interact with your own account safely.
+        Like / Dislike redirect to YouTube — AnimeTube has no login.
       </p>
 
       <div className="anime-border mt-4 flex items-center gap-3 rounded-xl bg-card p-4">
         <Link to="/channel/$channelId" params={{ channelId: video.snippet.channelId }}
-          className="grid h-12 w-12 place-items-center rounded-full bg-[var(--gradient-primary)] font-bold text-white">
+          className="grid h-12 w-12 place-items-center rounded-full bg-primary/20 font-bold text-primary text-lg shrink-0">
           {video.snippet.channelTitle?.[0] || "?"}
         </Link>
         <div className="flex-1">
@@ -188,7 +252,7 @@ function Comments({ videoId }: { videoId: string }) {
   );
 }
 
-function Related() {
+function Related({ onFirstVideo }: { onFirstVideo?: (id: string) => void }) {
   const { v } = Route.useSearch();
   const { data: videoData } = useQuery({
     queryKey: ["video", v],
@@ -201,10 +265,17 @@ function Related() {
     queryFn: () => getRelated(q, v),
     enabled: !!videoData,
   });
+
+  // Pass first related video id up for auto-next
+  useEffect(() => {
+    const firstId = data?.items?.[0]?.id;
+    if (firstId && onFirstVideo) onFirstVideo(firstId);
+  }, [data, onFirstVideo]);
+
   return (
     <aside>
-      <h2 className="mb-4 font-display text-lg font-bold flex items-center gap-2">
-        <span>⏭</span> <span className="text-gradient">Up Next</span>
+      <h2 className="mb-4 font-semibold text-base flex items-center gap-2 text-foreground">
+        Up Next
       </h2>
       <div className="space-y-2">
         {isLoading
@@ -218,6 +289,8 @@ function Related() {
 
 function WatchPage() {
   const { v } = Route.useSearch();
+  const [nextVideoId, setNextVideoId] = useState<string | null>(null);
+
   if (!v) {
     return (
       <div className="min-h-screen bg-background">
@@ -226,7 +299,6 @@ function WatchPage() {
           <Sidebar />
           <main className="flex-1 grid place-items-center py-32 text-center">
             <div>
-              <div className="text-6xl">🎬</div>
               <p className="mt-4 text-muted-foreground">No video selected.</p>
               <Link to="/" className="mt-3 text-primary underline">Browse trending</Link>
             </div>
@@ -242,9 +314,9 @@ function WatchPage() {
         <Sidebar />
         <main className="flex-1 min-w-0 px-3 py-4 sm:px-4 sm:py-6 lg:grid lg:grid-cols-[1fr_380px] lg:gap-6">
           <Suspense fallback={<div className="aspect-video skeleton rounded-xl" />}>
-            <VideoMain />
+            <VideoMain autoNextId={nextVideoId} />
           </Suspense>
-          <Related />
+          <Related onFirstVideo={(id) => setNextVideoId(id)} />
         </main>
       </div>
     </div>
