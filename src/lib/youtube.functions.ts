@@ -1,35 +1,25 @@
 import { processYouTubeResponse } from "./content-filter";
 
-const API = "https://www.googleapis.com/youtube/v3";
-
-function getKey(): string {
-  const key = import.meta.env.VITE_YOUTUBE_API_KEY as string | undefined;
-  if (!key || key === "your_youtube_api_key_here") {
-    throw new Error(
-      "VITE_YOUTUBE_API_KEY belum diset. " +
-      "Untuk local: buat file .env dan isi VITE_YOUTUBE_API_KEY=xxx. " +
-      "Untuk Vercel: tambahkan di Settings > Environment Variables."
-    );
-  }
-  return key;
-}
+// Proxy endpoint — API key disimpan di server Vercel, tidak exposed ke browser
+const PROXY = "/api/youtube";
 
 async function yt(path: string, params: Record<string, string | number | undefined>) {
-  const url = new URL(`${API}/${path}`);
+  const url = new URL(PROXY, window.location.origin);
+  url.searchParams.set("path", path);
   Object.entries(params).forEach(([k, v]) => {
     if (v !== undefined && v !== "") url.searchParams.set(k, String(v));
   });
-  url.searchParams.set("key", getKey());
+
   const res = await fetch(url.toString());
   if (!res.ok) {
-    const text = await res.text();
+    const data = await res.json().catch(() => ({}));
     let message = `YouTube API ${res.status}`;
     if (res.status === 403) {
-      message = "quota|403: API key tidak valid, domain belum di-whitelist, atau quota habis";
+      message = "quota|403: Quota habis atau API key bermasalah";
     } else if (res.status === 429) {
       message = "quota|429: Quota harian habis (10.000 units/hari)";
     }
-    throw new Error(message + ": " + text.slice(0, 200));
+    throw new Error(message + ": " + JSON.stringify(data).slice(0, 200));
   }
   return res.json();
 }
@@ -42,14 +32,6 @@ function parseDurationSec(iso: string | undefined): number {
   return parseInt(m[1] || "0") * 3600 + parseInt(m[2] || "0") * 60 + parseInt(m[3] || "0");
 }
 
-/**
- * Smart ranking algorithm:
- * - Penalizes very short clips < 30s (spam/preview)
- * - Boosts medium-length 4–25 min (episode content)
- * - Boosts recent uploads (last 7 days)
- * - Boosts high engagement (likes/views ratio)
- * - Boosts comment activity
- */
 function smartRank(items: any[]): any[] {
   const now = Date.now();
   return items
