@@ -3,6 +3,7 @@ import { RouterProvider, createRouter } from "@tanstack/react-router";
 import { StrictMode } from "react";
 import ReactDOM from "react-dom/client";
 import { registerRegionChangeCallback } from "./hooks/use-region";
+import { registerSafeModeChangeCallback } from "./hooks/use-safe-mode";
 import { routeTree } from "./routeTree.gen";
 import "./styles.css";
 
