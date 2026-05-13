@@ -1,8 +1,4 @@
-/**
- * Region selector hook.
- * Default: ID (Indonesia)
- * Supported: ID, JP, CN, ES, KR, US, GB, AU, FR, DE
- */
+import { useEffect, useState } from "react";
 
 export type Region = {
   code: string;
@@ -41,9 +37,15 @@ function readRegion(): string {
   return localStorage.getItem(KEY) || "ID";
 }
 
-// Simple global state — no React context needed
 let _region = readRegion();
 const _listeners = new Set<(r: string) => void>();
+
+// Callback untuk invalidate React Query cache saat region berubah
+let _onRegionChange: (() => void) | null = null;
+
+export function registerRegionChangeCallback(cb: () => void) {
+  _onRegionChange = cb;
+}
 
 export function getRegion() { return _region; }
 
@@ -51,9 +53,9 @@ export function setRegion(code: string) {
   _region = code;
   if (typeof window !== "undefined") localStorage.setItem(KEY, code);
   _listeners.forEach((l) => l(code));
+  // Trigger query invalidation
+  _onRegionChange?.();
 }
-
-import { useEffect, useState } from "react";
 
 export function useRegion() {
   const [region, setR] = useState(readRegion);

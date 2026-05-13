@@ -234,12 +234,17 @@ function VideoMain({ autoNextId }: { autoNextId: string | null }) {
         {/* PiP button overlay */}
         <div className="flex items-center justify-between bg-[#1f1f1f] px-3 py-1.5">
           <span className="text-[11px] text-muted-foreground">
-            {showMini ? "Mini player aktif" : "Scroll ke bawah untuk mini player"}
+            Mini player — klik untuk aktifkan atau scroll ke bawah
           </span>
           <button
-            onClick={() => setShowMini((s) => !s)}
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowMini(true);
+              // Scroll ke bawah agar player keluar viewport
+              window.scrollBy({ top: 400, behavior: "smooth" });
+            }}
             className="flex items-center gap-1.5 rounded px-2 py-1 text-[11px] text-muted-foreground hover:text-foreground hover:bg-surface transition-colors"
-            title="Picture in Picture"
+            title="Aktifkan Mini Player"
           >
             <Minimize2 size={13} />
             <span>Mini Player</span>

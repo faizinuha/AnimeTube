@@ -68,10 +68,13 @@ function RegionSelector({ onClose }: { onClose?: () => void }) {
         </div>
       </div>
 
-      {/* Warning dialog */}
+      {/* Warning dialog — z-index tinggi agar tidak tertutup apapun */}
       {pending && pendingRegion?.warning && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="w-full max-w-sm rounded-xl border border-border bg-background p-5 shadow-xl">
+        <div
+          className="fixed inset-0 flex items-center justify-center p-4"
+          style={{ zIndex: 999999, background: "rgba(0,0,0,0.7)" }}
+        >
+          <div className="w-full max-w-sm rounded-xl border border-border bg-background p-5 shadow-2xl">
             <div className="flex items-start gap-3 mb-3">
               <AlertTriangle size={20} className="text-yellow-500 shrink-0 mt-0.5" />
               <div>

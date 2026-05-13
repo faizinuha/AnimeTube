@@ -24,8 +24,13 @@ const router = createRouter({
   routeTree,
   context: { queryClient },
   defaultPreloadStaleTime: 0,
-  defaultPreload: "intent",   // Prefetch saat hover link — data sudah siap sebelum klik
+  defaultPreload: "intent",
   scrollRestoration: true,
+});
+
+// Invalidate semua queries saat region berubah → konten langsung refresh
+registerRegionChangeCallback(() => {
+  queryClient.invalidateQueries();
 });
 
 declare module "@tanstack/react-router" {
