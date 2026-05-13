@@ -23,6 +23,91 @@ export const Route = createFileRoute("/watch")({
   component: WatchPage,
 });
 
+// ── Mini Player (PiP) ─────────────────────────────────────────────
+function MiniPlayer({
+  videoId, title, onClose, onExpand,
+}: {
+  videoId: string;
+  title: string;
+  onClose: () => void;
+  onExpand: () => void;
+}) {
+  const [pos, setPos] = useState({ x: 0, y: 0 });
+  const [dragging, setDragging] = useState(false);
+  const dragStart = useRef({ mx: 0, my: 0, px: 0, py: 0 });
+  const ref = useRef<HTMLDivElement>(null);
+
+  // Default position: bottom-right
+  useEffect(() => {
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    setPos({ x: w - 340, y: h - 220 });
+  }, []);
+
+  const onMouseDown = (e: React.MouseEvent) => {
+    setDragging(true);
+    dragStart.current = { mx: e.clientX, my: e.clientY, px: pos.x, py: pos.y };
+  };
+
+  useEffect(() => {
+    if (!dragging) return;
+    const onMove = (e: MouseEvent) => {
+      const dx = e.clientX - dragStart.current.mx;
+      const dy = e.clientY - dragStart.current.my;
+      setPos({
+        x: Math.max(0, Math.min(window.innerWidth - 320, dragStart.current.px + dx)),
+        y: Math.max(0, Math.min(window.innerHeight - 200, dragStart.current.py + dy)),
+      });
+    };
+    const onUp = () => setDragging(false);
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+    return () => { window.removeEventListener("mousemove", onMove); window.removeEventListener("mouseup", onUp); };
+  }, [dragging]);
+
+  return (
+    <div
+      ref={ref}
+      className="fixed z-[9000] rounded-xl overflow-hidden shadow-2xl border border-border"
+      style={{ left: pos.x, top: pos.y, width: 320, cursor: dragging ? "grabbing" : "grab" }}
+    >
+      {/* Drag handle */}
+      <div
+        className="flex items-center justify-between bg-[#1f1f1f] px-2 py-1.5 select-none"
+        onMouseDown={onMouseDown}
+      >
+        <p className="text-[11px] text-muted-foreground truncate flex-1 mr-2">{title}</p>
+        <div className="flex items-center gap-1 shrink-0">
+          <button
+            onClick={onExpand}
+            className="grid h-6 w-6 place-items-center rounded text-muted-foreground hover:text-foreground hover:bg-surface transition-colors"
+            title="Perbesar"
+          >
+            <Maximize2 size={12} />
+          </button>
+          <button
+            onClick={onClose}
+            className="grid h-6 w-6 place-items-center rounded text-muted-foreground hover:text-foreground hover:bg-surface transition-colors"
+            title="Tutup"
+          >
+            <XIcon size={12} />
+          </button>
+        </div>
+      </div>
+      {/* Video */}
+      <div className="relative bg-black" style={{ aspectRatio: "16/9" }}>
+        <iframe
+          src={`https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1&controls=1`}
+          title={title}
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+          className="absolute inset-0 h-full w-full border-0"
+        />
+      </div>
+    </div>
+  );
+}
+
 function ActionButton({
   label, icon, onClick, href, variant = "default",
 }: {
@@ -49,6 +134,8 @@ function VideoMain({ autoNextId }: { autoNextId: string | null }) {
   const [showFull, setShowFull] = useState(false);
   const [countdown, setCountdown] = useState<number | null>(null);
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [showMini, setShowMini] = useState(false);
+  const playerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!video) return;
@@ -99,6 +186,24 @@ function VideoMain({ autoNextId }: { autoNextId: string | null }) {
   // Cleanup on unmount
   useEffect(() => () => { if (countdownRef.current) clearInterval(countdownRef.current); }, []);
 
+  // Scroll detection — show mini player when video scrolls out of view
+  useEffect(() => {
+    if (!playerRef.current) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        // Show mini player when less than 20% of player is visible
+        if (!entry.isIntersecting && entry.intersectionRatio < 0.2) {
+          setShowMini(true);
+        } else {
+          setShowMini(false);
+        }
+      },
+      { threshold: [0, 0.2] }
+    );
+    observer.observe(playerRef.current);
+    return () => observer.disconnect();
+  }, [video]);
+
   if (isLoading) return <div className="aspect-video skeleton rounded-xl" />;
 
   if (!video) {
@@ -115,7 +220,7 @@ function VideoMain({ autoNextId }: { autoNextId: string | null }) {
 
   return (
     <div>
-      <div className="overflow-hidden rounded-xl">
+      <div ref={playerRef} className="overflow-hidden rounded-xl">
         <div className="relative aspect-video bg-black">
           <iframe
             key={v}
@@ -126,7 +231,34 @@ function VideoMain({ autoNextId }: { autoNextId: string | null }) {
             className="absolute inset-0 h-full w-full border-0"
           />
         </div>
+        {/* PiP button overlay */}
+        <div className="flex items-center justify-between bg-[#1f1f1f] px-3 py-1.5">
+          <span className="text-[11px] text-muted-foreground">
+            {showMini ? "Mini player aktif" : "Scroll ke bawah untuk mini player"}
+          </span>
+          <button
+            onClick={() => setShowMini((s) => !s)}
+            className="flex items-center gap-1.5 rounded px-2 py-1 text-[11px] text-muted-foreground hover:text-foreground hover:bg-surface transition-colors"
+            title="Picture in Picture"
+          >
+            <Minimize2 size={13} />
+            <span>Mini Player</span>
+          </button>
+        </div>
       </div>
+
+      {/* Mini Player */}
+      {showMini && video && (
+        <MiniPlayer
+          videoId={v}
+          title={video.snippet.title}
+          onClose={() => setShowMini(false)}
+          onExpand={() => {
+            setShowMini(false);
+            playerRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+          }}
+        />
+      )}
 
       {/* Auto-next countdown banner */}
       {countdown !== null && autoNextId && (

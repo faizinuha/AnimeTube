@@ -4,15 +4,14 @@ import { useWatchHistory } from "@/hooks/use-watch-history";
 import { GENRES } from "@/lib/constants";
 import { Link } from "@tanstack/react-router";
 import {
-  AlertTriangle, Coffee, Compass, Globe,
-  HelpCircle, Home, Info, Lock,
-  Radio, Settings, TrendingUp, Tv2, X, Zap,
+    AlertTriangle, Coffee, Compass, Globe,
+    HelpCircle, Home, Info, Lock,
+    Radio, Settings, TrendingUp, Tv2, X,
 } from "lucide-react";
 import { useState } from "react";
 
 const MAIN = [
   { to: "/",                label: "Beranda",  Icon: Home      },
-  { to: "/shorts",          label: "Shorts",   Icon: Zap       },
   { to: "/live",            label: "Live",     Icon: Radio     },
   { to: "/search",          label: "Jelajahi", Icon: Compass,  search: { q: "anime" } },
   { to: "/category/$genre", label: "Trending", Icon: TrendingUp, params: { genre: "trending" } },
@@ -198,7 +197,7 @@ function NavList({ onItemClick }: { onItemClick?: () => void }) {
                 {it.thumb ? (
                   <img src={it.thumb} alt="" className="h-8 w-12 rounded object-cover shrink-0 opacity-80" loading="lazy" />
                 ) : (
-                  <Zap size={14} className="shrink-0 opacity-50" />
+                  <div className="h-8 w-12 rounded bg-surface shrink-0" />
                 )}
                 <span className="line-clamp-2 leading-tight">{it.title}</span>
               </Link>

@@ -20,7 +20,6 @@ const CHIPS = [
   { label: "Romance", q: "romance anime" },
   { label: "Comedy", q: "comedy anime" },
   { label: "Music", q: "anime music video" },
-  { label: "Shorts", q: "anime shorts amv" },
   { label: "Live", q: "anime live stream" },
   { label: "Mecha", q: "mecha anime" },
   { label: "Fantasy", q: "fantasy anime" },
