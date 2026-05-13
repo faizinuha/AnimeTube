@@ -3,7 +3,7 @@ import { Sidebar } from "@/components/Sidebar";
 import { REGIONS, useRegion } from "@/hooks/use-region";
 import { useTheme } from "@/hooks/use-theme";
 import { createFileRoute } from "@tanstack/react-router";
-import { AlertTriangle, Globe, Moon, Palette, Sun, Tv2 } from "lucide-react";
+import { AlertTriangle, CheckCircle, Globe, Moon, Palette, Shield, Sun, Tv2 } from "lucide-react";
 import { useState } from "react";
 
 export const Route = createFileRoute("/settings")({ component: SettingsPage });
@@ -108,6 +108,58 @@ function SettingsPage() {
                   </p>
                 </div>
               )}
+            </section>
+
+            {/* Keamanan Konten */}
+            <section className="rounded-xl border border-border bg-card p-5 space-y-3">
+              <div className="flex items-center gap-2 mb-1">
+                <Shield size={16} className="text-green-500" />
+                <h2 className="font-semibold text-sm text-foreground">Keamanan Konten</h2>
+                <span className="ml-auto rounded-full bg-green-500/15 border border-green-500/30 px-2 py-0.5 text-[10px] font-semibold text-green-500">
+                  Selalu Aktif
+                </span>
+              </div>
+              <div className="space-y-2.5">
+                <div className="flex items-start gap-2.5">
+                  <div className="h-5 w-5 rounded-full bg-green-500/20 grid place-items-center shrink-0 mt-0.5">
+                    <CheckCircle size={12} className="text-green-500" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-medium text-foreground">SafeSearch Strict</p>
+                    <p className="text-[11px] text-muted-foreground">YouTube API memfilter konten dewasa di level server</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-2.5">
+                  <div className="h-5 w-5 rounded-full bg-green-500/20 grid place-items-center shrink-0 mt-0.5">
+                    <CheckCircle size={12} className="text-green-500" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-medium text-foreground">Filter Kata Kunci NSFW</p>
+                    <p className="text-[11px] text-muted-foreground">Judul, deskripsi, dan tag video dicek otomatis</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-2.5">
+                  <div className="h-5 w-5 rounded-full bg-green-500/20 grid place-items-center shrink-0 mt-0.5">
+                    <CheckCircle size={12} className="text-green-500" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-medium text-foreground">Blokir Konten 18+</p>
+                    <p className="text-[11px] text-muted-foreground">Hentai, NSFW, konten dewasa eksplisit diblokir</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-2.5">
+                  <div className="h-5 w-5 rounded-full bg-green-500/20 grid place-items-center shrink-0 mt-0.5">
+                    <CheckCircle size={12} className="text-green-500" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-medium text-foreground">Bebas Judol & Pinjol</p>
+                    <p className="text-[11px] text-muted-foreground">Konten judi online dan pinjaman ilegal diblokir</p>
+                  </div>
+                </div>
+              </div>
+              <p className="text-[10px] text-muted-foreground/60 pt-1 border-t border-border">
+                Filter ini tidak dapat dinonaktifkan. AnimeTube berkomitmen menjaga platform tetap aman untuk semua umur.
+              </p>
             </section>
 
             {/* Tentang */}

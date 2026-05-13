@@ -22,6 +22,8 @@ async function fetchYT(path: string, params: Record<string, string>, key: string
   Object.entries(params).forEach(([k, v]) => {
     if (v !== undefined && v !== "") url.searchParams.set(k, String(v));
   });
+  // ALWAYS enforce safeSearch=strict — cannot be overridden by client
+  if (path === "search") url.searchParams.set("safeSearch", "strict");
   url.searchParams.set("key", key);
   return fetch(url.toString());
 }

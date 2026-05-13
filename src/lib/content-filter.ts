@@ -1,127 +1,117 @@
 /**
- * Content filter untuk memastikan semua konten aman untuk semua umur (Family Friendly)
+ * Content filter — SELALU AKTIF, tidak bisa dimatikan.
+ * Semua konten NSFW, 18+, kekerasan ekstrem, dan berbahaya
+ * diblokir secara otomatis di semua halaman.
  */
 
-// Daftar kata kunci yang dilarang (dewasa, kekerasan, asusila, dll)
-const FORBIDDEN_KEYWORDS = [
-  // Konten dewasa/18+
-  'adult', 'xxx', 'porn', 'sex', 'nude', 'nudes', 'naked', 'nsfw', 'hentai', 'ecchi',
-  'erotica', 'erotic', 'sexy', 'sensual', 'explicit', 'uncensored', 'uncensor',
-  'lewd', 'perverted', 'pedophile', 'pedophilia', 'child abuse', 'rape', 'sexual abuse',
-  
+// ── Kata kunci yang SELALU diblokir ──────────────────────────────
+const BLOCKED: string[] = [
+  // NSFW / 18+ / dewasa
+  "nsfw", "18+", "adult", "xxx", "porn", "pornhub", "sex", "sexy",
+  "nude", "nudes", "naked", "hentai", "ecchi", "lewd", "erotic",
+  "erotica", "explicit", "uncensored", "uncensor", "r18", "r-18",
+  "perverted", "fetish", "onlyfans", "av actress", "jav",
+
+  // Pelecehan anak — ZERO TOLERANCE
+  "pedophile", "pedophilia", "child abuse", "loli nsfw", "shota nsfw",
+
   // Kekerasan ekstrem
-  'gore', 'graphic violence', 'torture', 'mutilation', 'dismember', 'murder', 'killing',
-  'assassination', 'suicide', 'self-harm', 'cut wrist', 'hang', 'drown',
-  
-  // Narkoba & zat terlarang
-  'drug', 'cocaine', 'heroin', 'meth', 'cannabis', 'marijuana', 'weed', 'LSD',
-  'msmoking', 'how to make drug', 'trip',
-  
-  // Kekerasan & pelecehan
-  'bully', 'bullying', 'harassment', 'hate speech', 'racism', 'racist', 'discrimination',
-  'terrorists', 'terrorism', 'bomb', 'explosive', 'weapon', 'gun violence',
-  
-  // Scam & berbahaya
-  'scam', 'fraud', 'fake', 'money laundering', 'illegal', 'contraband',
-  'how to hack', 'how to cheat', 'how to steal',
+  "gore", "graphic violence", "torture", "mutilation", "dismember",
+  "snuff", "beheading", "execution video",
+
+  // Narkoba
+  "cocaine", "heroin", "meth", "crystal meth", "how to make drug",
+  "drug tutorial",
+
+  // Terorisme
+  "terrorism", "terrorist attack", "bomb making", "how to make bomb",
+  "isis", "al-qaeda",
+
+  // Scam / judi / pinjol
+  "judol", "judi online", "slot gacor", "pinjol ilegal",
+  "money laundering", "how to hack", "carding tutorial",
 ];
 
-// Daftar kata kunci agresif yang lebih umum
-const AGGRESSIVE_KEYWORDS = [
-  'mature', 'rated r', 'unrated', 'uncensored', 'warning', 'extreme',
-  'disturbing', 'graphic', 'bloody', 'violent', 'dark', 'twisted',
+// ── Kata kunci yang diblokir di judul/deskripsi (lebih longgar) ──
+const TITLE_BLOCKED: string[] = [
+  "rape", "sexual abuse", "child porn", "cp video",
+  "suicide method", "how to kill", "self harm tutorial",
 ];
 
-// Kategori pengganti yang aman
-const SAFE_CATEGORIES = ['Edukasi', 'Hiburan Umum', 'Teknologi', 'Olahraga', 'Musik', 'Keluarga', 'Petualangan'];
+// ── Channel yang diblokir ─────────────────────────────────────────
+const BLOCKED_CHANNELS: string[] = [
+  // Tambahkan channel ID yang diketahui bermasalah
+];
 
-/**
- * Cek apakah teks mengandung konten berbahaya
- */
-function containsForbiddenContent(text: string): boolean {
-  const lowerText = text.toLowerCase();
-  return FORBIDDEN_KEYWORDS.some((keyword) => lowerText.includes(keyword));
+function containsBlocked(text: string): boolean {
+  const t = text.toLowerCase();
+  return BLOCKED.some((kw) => t.includes(kw));
+}
+
+function titleContainsBlocked(text: string): boolean {
+  const t = text.toLowerCase();
+  return TITLE_BLOCKED.some((kw) => t.includes(kw));
 }
 
 /**
- * Cek apakah teks memiliki tanda konten agresif/mature
+ * Filter satu video — return false jika harus diblokir
  */
-function hasAggressiveWarning(text: string): boolean {
-  const lowerText = text.toLowerCase();
-  return AGGRESSIVE_KEYWORDS.some((keyword) => lowerText.includes(keyword));
+function isVideoSafe(video: any): boolean {
+  const title = (video.snippet?.title || "").toLowerCase();
+  const desc = (video.snippet?.description || "").toLowerCase();
+  const channel = (video.snippet?.channelTitle || "").toLowerCase();
+  const channelId = video.snippet?.channelId || "";
+  const tags: string[] = video.snippet?.tags || [];
+
+  // Blokir channel yang masuk daftar hitam
+  if (BLOCKED_CHANNELS.includes(channelId)) return false;
+
+  // Cek judul, deskripsi, channel, tags
+  if (
+    containsBlocked(title) ||
+    containsBlocked(desc) ||
+    containsBlocked(channel) ||
+    titleContainsBlocked(title) ||
+    tags.some((t) => containsBlocked(t))
+  ) {
+    return false;
+  }
+
+  return true;
 }
 
 /**
- * Filter judul video - hapus jika mengandung konten berbahaya
+ * Filter dan sanitize array video dari YouTube API.
+ * Selalu aktif — tidak ada cara untuk menonaktifkan filter ini.
  */
+export function processYouTubeResponse(videos: any[]): any[] {
+  return videos
+    .filter(isVideoSafe)
+    .map((v) => ({
+      ...v,
+      snippet: {
+        ...v.snippet,
+        title: v.snippet?.title || "Video",
+        description: v.snippet?.description || "",
+      },
+    }));
+}
+
+// Legacy exports — tetap ada agar tidak break import lain
 export function filterVideoTitle(title: string): string | null {
-  if (containsForbiddenContent(title)) {
-    return null; // Video harus dihapus
-  }
-  if (hasAggressiveWarning(title)) {
-    return null; // Video dengan warning mature juga dihapus
-  }
+  if (containsBlocked(title) || titleContainsBlocked(title)) return null;
   return title;
 }
-
-/**
- * Dapatkan kategori pengganti yang aman
- */
-export function getSafeCategory(): string {
-  return SAFE_CATEGORIES[Math.floor(Math.random() * SAFE_CATEGORIES.length)];
-}
-
-/**
- * Filter array video dan hapus yang mengandung konten berbahaya
- */
 export function filterVideos(videos: any[]): any[] {
-  return videos.filter((video) => {
-    const title = video.snippet?.title || '';
-    const channelTitle = video.snippet?.channelTitle || '';
-    const description = video.snippet?.description || '';
-
-    // Cek judul, nama channel, dan deskripsi
-    if (
-      containsForbiddenContent(title) ||
-      containsForbiddenContent(channelTitle) ||
-      containsForbiddenContent(description) ||
-      hasAggressiveWarning(title) ||
-      hasAggressiveWarning(description)
-    ) {
-      return false; // Hapus video ini
-    }
-
-    return true;
-  });
+  return videos.filter(isVideoSafe);
 }
-
-/**
- * Sanitize video data - pastikan semuanya family-friendly
- */
 export function sanitizeVideo(video: any): any {
-  if (!video.snippet) return video;
-
-  const sanitized = {
+  return {
     ...video,
     snippet: {
       ...video.snippet,
-      title: video.snippet.title || 'Video',
-      description: video.snippet.description || '',
+      title: video.snippet?.title || "Video",
+      description: video.snippet?.description || "",
     },
   };
-
-  return sanitized;
-}
-
-/**
- * Filter dan sanitize daftar video dari API
- */
-export function processYouTubeResponse(videos: any[]): any[] {
-  // Hapus video berbahaya
-  let filtered = filterVideos(videos);
-
-  // Sanitize video yang tersisa
-  filtered = filtered.map(sanitizeVideo);
-
-  return filtered;
 }

@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { RouterProvider, createRouter } from "@tanstack/react-router";
 import { StrictMode } from "react";
 import ReactDOM from "react-dom/client";
+import { registerRegionChangeCallback } from "./hooks/use-region";
 import { routeTree } from "./routeTree.gen";
 import "./styles.css";
 
@@ -30,6 +31,11 @@ const router = createRouter({
 
 // Invalidate semua queries saat region berubah → konten langsung refresh
 registerRegionChangeCallback(() => {
+  queryClient.invalidateQueries();
+});
+
+// Invalidate semua queries saat safe mode berubah → konten langsung refresh
+registerSafeModeChangeCallback(() => {
   queryClient.invalidateQueries();
 });
 
