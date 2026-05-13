@@ -3,7 +3,7 @@ import { useTheme } from "@/hooks/use-theme";
 import { topKeywords, trackSearch, useRecentSearches } from "@/hooks/use-watch-history";
 import { GENRES } from "@/lib/constants";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { Menu, Moon, Search, Sun } from "lucide-react";
+import { Menu, Mic, Moon, Search, Settings, Sun } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 const POPULAR = [
@@ -16,6 +16,7 @@ export function Navbar() {
   const navigate = useNavigate();
   const [q, setQ] = useState("");
   const [focused, setFocused] = useState(false);
+  const [showSearch, setShowSearch] = useState(false); // mobile search toggle
   const recent = useRecentSearches();
   const { theme, toggle } = useTheme();
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -50,62 +51,87 @@ export function Navbar() {
     if (!query) return;
     trackSearch(query);
     setFocused(false);
+    setShowSearch(false);
     setQ(query);
     navigate({ to: "/search", search: { q: query } });
   };
 
   return (
-    <header className="glass sticky top-0 z-50">
-      <div className="mx-auto flex max-w-[1600px] items-center gap-3 px-4 py-3">
+    <header className="yt-navbar">
+      <div className="flex items-center gap-2 px-4 py-2 h-14">
 
-        {/* Hamburger — mobile only */}
-        <button
-          type="button"
-          onClick={toggleSidebar}
-          aria-label="Open menu"
-          className="lg:hidden grid h-9 w-9 shrink-0 place-items-center rounded-lg text-muted-foreground hover:bg-surface hover:text-foreground transition-colors"
-        >
-          <Menu size={20} />
-        </button>
+        {/* Left: hamburger + logo */}
+        <div className="flex items-center gap-1 shrink-0">
+          <button
+            type="button"
+            onClick={toggleSidebar}
+            aria-label="Menu"
+            className="grid h-10 w-10 place-items-center rounded-full text-foreground hover:bg-surface transition-colors"
+          >
+            <Menu size={22} />
+          </button>
 
-        {/* Logo */}
-        <Link to="/" className="flex items-center gap-2.5 shrink-0 group">
-          <div className="h-8 w-8 overflow-hidden rounded-lg shrink-0 ring-1 ring-white/10 group-hover:ring-primary/50 transition-all">
-            <img src="/logo.jpg" alt="AnimeTube" className="h-full w-full object-cover" />
-          </div>
-          <span className="hidden sm:block font-bold text-lg tracking-tight text-foreground group-hover:text-primary transition-colors">
-            AnimeTube
-          </span>
-        </Link>
-
-        {/* Search */}
-        <div ref={wrapRef} className="flex-1 max-w-xl relative">
-          <form onSubmit={(e) => { e.preventDefault(); submit(q); }}>
-            <div className="relative">
-              <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-              <input
-                type="search"
-                value={q}
-                onFocus={() => setFocused(true)}
-                onChange={(e) => setQ(e.target.value)}
-                placeholder="Cari anime..."
-                className="w-full rounded-lg border border-border bg-surface pl-9 pr-4 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary/50 focus:outline-none focus:ring-1 focus:ring-primary/30 transition-all"
-              />
+          <Link to="/" className="flex items-center gap-1 ml-1 shrink-0">
+            <div className="h-7 w-7 overflow-hidden rounded-sm shrink-0">
+              <img src="/logo.jpg" alt="AnimeTube" className="h-full w-full object-cover" />
             </div>
-          </form>
+            <span className="hidden sm:block font-bold text-base tracking-tight">
+              <span className="text-[#ff0000]">Anime</span>
+              <span className="text-foreground">Tube</span>
+            </span>
+          </Link>
+        </div>
 
-          {/* Suggestions dropdown */}
+        {/* Center: search bar — hidden on mobile unless toggled */}
+        <div
+          ref={wrapRef}
+          className={`${showSearch ? "flex absolute inset-x-0 top-0 h-14 bg-background px-4 z-10 items-center" : "hidden sm:flex"} flex-1 max-w-[600px] mx-auto relative`}
+        >
+          {showSearch && (
+            <button onClick={() => setShowSearch(false)} className="mr-3 grid h-10 w-10 place-items-center rounded-full hover:bg-surface">
+              <Menu size={20} />
+            </button>
+          )}
+          <form
+            onSubmit={(e) => { e.preventDefault(); submit(q); }}
+            className="flex flex-1 items-center"
+          >
+            <input
+              type="search"
+              value={q}
+              onFocus={() => setFocused(true)}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="Cari anime..."
+              className="yt-search flex-1 min-w-0"
+            />
+            <button
+              type="submit"
+              aria-label="Search"
+              className="h-10 px-5 rounded-r-full border border-l-0 border-[#303030] bg-[#222222] text-foreground hover:bg-[#3f3f3f] transition-colors flex items-center justify-center shrink-0"
+            >
+              <Search size={18} />
+            </button>
+          </form>
+          <button
+            type="button"
+            aria-label="Search with voice"
+            className="ml-2 grid h-10 w-10 place-items-center rounded-full bg-surface text-foreground hover:bg-[#3f3f3f] transition-colors shrink-0"
+          >
+            <Mic size={18} />
+          </button>
+
+          {/* Suggestions */}
           {focused && suggestions.length > 0 && (
-            <div className="absolute left-0 right-0 top-full mt-1.5 z-50 overflow-hidden rounded-xl border border-border bg-popover shadow-[var(--shadow-card)]">
-              <ul className="max-h-[50vh] overflow-y-auto py-1">
+            <div className="absolute left-0 right-16 top-full mt-1 z-50 overflow-hidden rounded-xl border border-border bg-popover shadow-[var(--shadow-dropdown)]">
+              <ul className="py-2">
                 {suggestions.map((s, i) => (
                   <li key={s + i}>
                     <button
                       type="button"
                       onMouseDown={(e) => { e.preventDefault(); submit(s); }}
-                      className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm text-foreground hover:bg-surface transition-colors"
+                      className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm text-foreground hover:bg-surface transition-colors"
                     >
-                      <Search size={13} className="text-muted-foreground shrink-0" />
+                      <Search size={14} className="text-muted-foreground shrink-0" />
                       <span className="truncate">{s}</span>
                     </button>
                   </li>
@@ -115,14 +141,31 @@ export function Navbar() {
           )}
         </div>
 
-        {/* Right actions */}
-        <div className="flex items-center gap-2 shrink-0">
+        {/* Right: actions */}
+        <div className="flex items-center gap-1 ml-auto shrink-0">
+          {/* Mobile search toggle */}
+          <button
+            onClick={() => setShowSearch(true)}
+            className="sm:hidden grid h-10 w-10 place-items-center rounded-full text-foreground hover:bg-surface transition-colors"
+            aria-label="Search"
+          >
+            <Search size={20} />
+          </button>
+
+          <Link
+            to="/settings"
+            className="grid h-10 w-10 place-items-center rounded-full text-foreground hover:bg-surface transition-colors"
+            aria-label="Settings"
+          >
+            <Settings size={20} />
+          </Link>
+
           <button
             onClick={toggle}
             aria-label="Toggle theme"
-            className="grid h-9 w-9 place-items-center rounded-lg border border-border bg-surface text-muted-foreground hover:text-foreground hover:border-primary/40 transition-all"
+            className="grid h-10 w-10 place-items-center rounded-full text-foreground hover:bg-surface transition-colors"
           >
-            {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
+            {theme === "dark" ? <Sun size={20} /> : <Moon size={20} />}
           </button>
         </div>
       </div>
