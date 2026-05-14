@@ -2,6 +2,7 @@ import { AdblockDetector } from "@/components/AdblockDetector";
 import { DisclaimerModal } from "@/components/DisclaimerModal";
 import { OfflineScreen } from "@/components/OfflineScreen";
 import { Toaster } from "@/components/ui/sonner";
+import { useSessionTimer } from "@/hooks/use-session-timer";
 import { QueryClient } from "@tanstack/react-query";
 import { Link, Outlet, createRootRouteWithContext } from "@tanstack/react-router";
 
