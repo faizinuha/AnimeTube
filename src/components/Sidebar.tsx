@@ -9,6 +9,7 @@ import {
     Radio, Settings, TrendingUp, Tv2, X,
 } from "lucide-react";
 import { useState } from "react";
+import { createPortal } from "react-dom";
 
 const MAIN = [
   { to: "/",                label: "Beranda",  Icon: Home      },
@@ -68,11 +69,11 @@ function RegionSelector({ onClose }: { onClose?: () => void }) {
         </div>
       </div>
 
-      {/* Warning dialog — z-index tinggi agar tidak tertutup apapun */}
-      {pending && pendingRegion?.warning && (
+      {/* Warning dialog — pakai Portal agar tidak tertutup overflow sidebar */}
+      {pending && pendingRegion?.warning && createPortal(
         <div
           className="fixed inset-0 flex items-center justify-center p-4"
-          style={{ zIndex: 999999, background: "rgba(0,0,0,0.7)" }}
+          style={{ zIndex: 999999, background: "rgba(0,0,0,0.75)" }}
         >
           <div className="w-full max-w-sm rounded-xl border border-border bg-background p-5 shadow-2xl">
             <div className="flex items-start gap-3 mb-3">
@@ -101,7 +102,8 @@ function RegionSelector({ onClose }: { onClose?: () => void }) {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );

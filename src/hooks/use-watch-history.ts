@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 const KEY = "animetube:history:v1";
 const SEARCHES_KEY = "animetube:searches:v1";
@@ -62,6 +62,15 @@ export function useWatchHistory() {
   }, []);
   const clear = useCallback(() => write(KEY, []), []);
   return { items, clear };
+}
+
+export function removeSearch(q: string) {
+  const list = read<string[]>(SEARCHES_KEY, []);
+  write(SEARCHES_KEY, list.filter((s) => s.toLowerCase() !== q.toLowerCase()));
+}
+
+export function clearSearchHistory() {
+  write(SEARCHES_KEY, []);
 }
 
 export function useRecentSearches() {

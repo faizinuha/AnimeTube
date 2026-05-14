@@ -20,6 +20,7 @@ export function Navbar() {
   const recent = useRecentSearches();
   const { theme, toggle } = useTheme();
   const wrapRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const onClick = (e: MouseEvent) => {
@@ -27,6 +28,22 @@ export function Navbar() {
     };
     document.addEventListener("mousedown", onClick);
     return () => document.removeEventListener("mousedown", onClick);
+  }, []);
+
+  // Keyboard shortcut: "/" focuses search bar
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement)?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+      if (e.key === "/") {
+        e.preventDefault();
+        inputRef.current?.focus();
+        setShowSearch(true);
+        setFocused(true);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
   }, []);
 
   const suggestions = useMemo(() => {
@@ -97,11 +114,12 @@ export function Navbar() {
             className="flex flex-1 items-center"
           >
             <input
+              ref={inputRef}
               type="search"
               value={q}
               onFocus={() => setFocused(true)}
               onChange={(e) => setQ(e.target.value)}
-              placeholder="Cari anime..."
+              placeholder="Cari anime... (tekan / untuk fokus)"
               className="yt-search flex-1 min-w-0"
             />
             <button
@@ -123,19 +141,45 @@ export function Navbar() {
           {/* Suggestions */}
           {focused && suggestions.length > 0 && (
             <div className="absolute left-0 right-16 top-full mt-1 z-50 overflow-hidden rounded-xl border border-border bg-popover shadow-[var(--shadow-dropdown)]">
-              <ul className="py-2">
-                {suggestions.map((s, i) => (
-                  <li key={s + i}>
-                    <button
-                      type="button"
-                      onMouseDown={(e) => { e.preventDefault(); submit(s); }}
-                      className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm text-foreground hover:bg-surface transition-colors"
-                    >
-                      <Search size={14} className="text-muted-foreground shrink-0" />
-                      <span className="truncate">{s}</span>
-                    </button>
-                  </li>
-                ))}
+              {/* Header: recent label + clear all */}
+              {recent.length > 0 && !q.trim() && (
+                <div className="flex items-center justify-between px-4 pt-2 pb-1">
+                  <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">Pencarian terakhir</span>
+                  <button
+                    type="button"
+                    onMouseDown={(e) => { e.preventDefault(); clearSearchHistory(); }}
+                    className="text-[11px] text-muted-foreground hover:text-destructive transition-colors"
+                  >
+                    Hapus semua
+                  </button>
+                </div>
+              )}
+              <ul className="py-1">
+                {suggestions.map((s, i) => {
+                  const isRecent = recent.includes(s);
+                  return (
+                    <li key={s + i} className="group flex items-center gap-1 px-2">
+                      <button
+                        type="button"
+                        onMouseDown={(e) => { e.preventDefault(); submit(s); }}
+                        className="flex flex-1 items-center gap-3 py-2.5 px-2 text-left text-sm text-foreground hover:bg-surface transition-colors rounded-lg"
+                      >
+                        <Search size={14} className="text-muted-foreground shrink-0" />
+                        <span className="truncate">{s}</span>
+                      </button>
+                      {isRecent && (
+                        <button
+                          type="button"
+                          onMouseDown={(e) => { e.preventDefault(); removeSearch(s); }}
+                          className="opacity-0 group-hover:opacity-100 grid h-7 w-7 place-items-center rounded-full text-muted-foreground hover:text-foreground hover:bg-surface transition-all shrink-0"
+                          title="Hapus"
+                        >
+                          <XIcon size={13} />
+                        </button>
+                      )}
+                    </li>
+                  );
+                })}
               </ul>
             </div>
           )}

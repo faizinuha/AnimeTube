@@ -1,7 +1,6 @@
 import { AdSlot } from "@/components/AdSlot";
 import { Equalizer } from "@/components/Equalizer";
 import { Navbar } from "@/components/Navbar";
-import { Spinner } from "@/components/Shuriken";
 import { Sidebar } from "@/components/Sidebar";
 import { SkeletonCard } from "@/components/SkeletonCard";
 import { VideoCard } from "@/components/VideoCard";
@@ -11,7 +10,9 @@ import { getComments, getRelated, getVideo } from "@/lib/youtube.functions";
 import { useQuery } from "@tanstack/react-query";
 import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 import { fallback, zodValidator } from "@tanstack/zod-adapter";
-import { Suspense, useEffect, useRef, useState } from "react";
+import { Maximize2, Minimize2, X as XIcon } from "lucide-react";
+import { Component, Suspense, useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 import { z } from "zod";
 
 const searchSchema = z.object({
@@ -22,6 +23,35 @@ export const Route = createFileRoute("/watch")({
   validateSearch: zodValidator(searchSchema),
   component: WatchPage,
 });
+
+// ── Section-level Error Boundary ─────────────────────────────────
+interface EBState { hasError: boolean; message: string }
+class SectionErrorBoundary extends Component<{ children: React.ReactNode; fallback?: React.ReactNode }, EBState> {
+  constructor(props: { children: React.ReactNode; fallback?: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false, message: "" };
+  }
+  static getDerivedStateFromError(error: Error): EBState {
+    return { hasError: true, message: error?.message || "Something went wrong" };
+  }
+  render() {
+    if (this.state.hasError) {
+      return this.props.fallback ?? (
+        <div className="rounded-xl border border-border bg-card p-6 text-center text-sm text-muted-foreground">
+          <p className="text-2xl mb-2">😵</p>
+          <p>{this.state.message}</p>
+          <button
+            onClick={() => this.setState({ hasError: false, message: "" })}
+            className="mt-3 text-xs text-primary hover:underline"
+          >
+            Coba lagi
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 // ── Mini Player (PiP) ─────────────────────────────────────────────
 function MiniPlayer({
@@ -68,7 +98,7 @@ function MiniPlayer({
   return (
     <div
       ref={ref}
-      className="fixed z-[9000] rounded-xl overflow-hidden shadow-2xl border border-border"
+      className="fixed z-[150] rounded-xl overflow-hidden shadow-2xl border border-border"
       style={{ left: pos.x, top: pos.y, width: 320, cursor: dragging ? "grabbing" : "grab" }}
     >
       {/* Drag handle */}
@@ -137,6 +167,24 @@ function VideoMain({ autoNextId }: { autoNextId: string | null }) {
   const [showMini, setShowMini] = useState(false);
   const playerRef = useRef<HTMLDivElement>(null);
 
+  // ── Watch timer — health reminder after 5h ────────────────────
+  const handleHealthToast = useCallback(
+    (msg: { title: string; body: string; totalSecs: number }) => {
+      toast(msg.title, {
+        description: `${msg.body} (Total hari ini: ${formatWatchTime(msg.totalSecs)})`,
+        duration: 10000,
+        icon: "😴",
+        action: {
+          label: "Istirahat",
+          onClick: () => window.scrollTo({ top: 0, behavior: "smooth" }),
+        },
+      });
+    },
+    [],
+  );
+  // active = true whenever this component is mounted (video is open)
+  useWatchTimer(true, handleHealthToast);
+
   useEffect(() => {
     if (!video) return;
     trackWatch({
@@ -147,6 +195,29 @@ function VideoMain({ autoNextId }: { autoNextId: string | null }) {
       tags: video.snippet.tags,
     });
   }, [v, video]);
+
+  // ── Keyboard shortcuts ────────────────────────────────────────
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      // Ignore when typing in input/textarea
+      const tag = (e.target as HTMLElement)?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+
+      switch (e.key.toLowerCase()) {
+        case "m":
+          // Toggle mini player
+          setShowMini((s) => !s);
+          toast(showMini ? "Mini player dinonaktifkan" : "Mini player aktif", { duration: 1500 });
+          break;
+        case "escape":
+          if (showMini) { setShowMini(false); }
+          if (countdown !== null) { cancelCountdown(); }
+          break;
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [showMini, countdown]);
 
   // Listen for YouTube iframe postMessage — detect video ended
   useEffect(() => {
@@ -301,8 +372,15 @@ function VideoMain({ autoNextId }: { autoNextId: string | null }) {
         <ActionButton label={`Like  ${formatViews(video.statistics?.likeCount)}`} icon="👍" href={ytWatchUrl} />
         <ActionButton label="Dislike" icon="👎" href={ytWatchUrl} />
         <ActionButton label="Share" icon="↗" onClick={() => {
-          if (navigator.share) navigator.share({ title: video.snippet.title, url: window.location.href }).catch(() => {});
-          else { navigator.clipboard?.writeText(window.location.href); alert("Link copied!"); }
+          if (navigator.share) {
+            navigator.share({ title: video.snippet.title, url: window.location.href }).catch(() => {});
+          } else {
+            navigator.clipboard?.writeText(window.location.href).then(() => {
+              toast.success("Link disalin ke clipboard!");
+            }).catch(() => {
+              toast.error("Gagal menyalin link");
+            });
+          }
         }} />
         <ActionButton label="Download" icon="⬇️" href={downloadUrl} variant="primary" />
         <ActionButton label="Watch on YouTube" icon="▶️" href={ytWatchUrl} />
@@ -342,7 +420,9 @@ function VideoMain({ autoNextId }: { autoNextId: string | null }) {
       </div>
 
       <div className="mt-4"><AdSlot id="ad-watch-below" size="leaderboard" /></div>
-      <Comments videoId={v} />
+      <SectionErrorBoundary>
+        <Comments videoId={v} />
+      </SectionErrorBoundary>
     </div>
   );
 }
@@ -358,7 +438,20 @@ function Comments({ videoId }: { videoId: string }) {
       <h2 className="font-display text-xl font-bold flex items-center gap-2">
         <span>💬</span> <span className="text-gradient">Comments</span>
       </h2>
-      {isLoading && <Spinner />}
+      {isLoading && (
+        <div className="mt-4 space-y-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="flex gap-3 animate-pulse">
+              <div className="skeleton h-10 w-10 rounded-full shrink-0" />
+              <div className="flex-1 space-y-2 pt-1">
+                <div className="skeleton h-3 w-1/4 rounded" />
+                <div className="skeleton h-3 w-full rounded" />
+                <div className="skeleton h-3 w-3/4 rounded" />
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
       {data?.disabled && <p className="mt-3 text-sm text-muted-foreground">Comments are disabled for this video.</p>}
       <div className="mt-4 space-y-4">
         {data?.items?.map((c: any) => {
@@ -449,10 +542,19 @@ function WatchPage() {
       <div className="flex">
         <Sidebar />
         <main className="flex-1 min-w-0 px-3 py-4 sm:px-4 sm:py-6 lg:grid lg:grid-cols-[1fr_380px] lg:gap-6">
-          <Suspense fallback={<div className="aspect-video skeleton rounded-xl" />}>
-            <VideoMain autoNextId={nextVideoId} />
-          </Suspense>
-          <Related onFirstVideo={(id) => setNextVideoId(id)} />
+          <SectionErrorBoundary>
+            <Suspense fallback={<div className="aspect-video skeleton rounded-xl" />}>
+              <VideoMain autoNextId={nextVideoId} />
+            </Suspense>
+          </SectionErrorBoundary>
+          <SectionErrorBoundary fallback={
+            <aside className="rounded-xl border border-border bg-card p-6 text-center text-sm text-muted-foreground">
+              <p className="text-2xl mb-2">📭</p>
+              <p>Gagal memuat video terkait</p>
+            </aside>
+          }>
+            <Related onFirstVideo={(id) => setNextVideoId(id)} />
+          </SectionErrorBoundary>
         </main>
       </div>
     </div>
