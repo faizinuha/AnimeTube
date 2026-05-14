@@ -5,13 +5,14 @@ import { Sidebar } from "@/components/Sidebar";
 import { SkeletonCard } from "@/components/SkeletonCard";
 import { VideoCard } from "@/components/VideoCard";
 import { trackWatch } from "@/hooks/use-watch-history";
+import { formatWatchTime, useWatchTimer } from "@/hooks/use-watch-timer";
 import { formatViews, timeAgo } from "@/lib/format";
 import { getComments, getRelated, getVideo } from "@/lib/youtube.functions";
 import { useQuery } from "@tanstack/react-query";
 import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 import { fallback, zodValidator } from "@tanstack/zod-adapter";
 import { Maximize2, Minimize2, X as XIcon } from "lucide-react";
-import { Component, Suspense, useEffect, useRef, useState } from "react";
+import { Component, Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
 
